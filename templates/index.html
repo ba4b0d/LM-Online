@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- html2pdf.js for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -70,14 +72,19 @@
             border: 1px solid #888;
             border-radius: 0.75rem; /* Tailwind rounded-lg */
             width: 80%; /* Could be responsive */
-            max-width: 500px; /* Max width for larger screens */
+            max-width: 600px; /* Max width for larger screens - Adjusted for letter content */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Tailwind shadow-lg */
+            position: relative; /* For close button positioning */
         }
         .close-button {
             color: #aaa;
             float: left; /* Position to the top right */
             font-size: 28px;
             font-weight: bold;
+            position: absolute; /* Absolute positioning within the modal-content */
+            top: 10px;
+            left: 20px; /* Adjusted for RTL */
+            cursor: pointer;
         }
         .close-button:hover,
         .close-button:focus {
@@ -108,6 +115,31 @@
         .modal-table tr:hover {
             background-color: #f0f4f8; /* blue-50 */
             cursor: pointer;
+        }
+
+        /* Style for the letter content inside the modal for better PDF rendering */
+        #modal-letter-content {
+            white-space: pre-wrap; /* Preserves whitespace and line breaks */
+            text-align: right; /* Ensure Persian text is right-aligned */
+            line-height: 1.8; /* Better readability */
+            font-size: 1rem;
+            color: #333;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            background-color: #fff;
+            margin-bottom: 20px;
+            max-height: 400px; /* Limit height for scrollability */
+            overflow-y: auto; /* Enable scrolling for long letters */
+        }
+        /* Style for header image within the modal content */
+        #letter-template-info {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border-bottom: 1px dashed #ccc;
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
@@ -294,19 +326,24 @@
                     </div>
                 </div>
 
-                <!-- Header Upload Section -->
-                <div class="mb-6 pt-4 mt-4">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">آپلود سربرگ</h3>
+                <!-- DOCX Template Upload Section -->
+                <div class="mb-6 pt-4 mt-4 border-t border-gray-200">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">آپلود فایل الگو (Word)</h3>
                     <div class="flex items-center">
-                        <input type="file" id="header-upload-input" accept="image/*,application/pdf" class="hidden">
-                        <label for="header-upload-input" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-150 ease-in-out">
-                            <i class="fas fa-upload ml-2"></i> انتخاب فایل سربرگ
+                        <input type="file" id="template-upload-input" accept=".docx" class="hidden">
+                        <label for="template-upload-input" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-150 ease-in-out">
+                            <i class="fas fa-upload ml-2"></i> انتخاب فایل الگو
                         </label>
-                        <span id="header-file-name" class="ml-3 text-gray-600">فایلی انتخاب نشده است.</span>
+                        <span id="template-file-name" class="ml-3 text-gray-600">فایلی انتخاب نشده است.</span>
                     </div>
-                    <button id="upload-header-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mt-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-150 ease-in-out">
-                        <i class="fas fa-cloud-upload-alt ml-2"></i> آپلود سربرگ
+                    <button id="upload-template-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mt-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-150 ease-in-out">
+                        <i class="fas fa-cloud-upload-alt ml-2"></i> آپلود فایل الگو
                     </button>
+                    <div id="template-preview-container" class="mt-4 p-4 border border-gray-200 rounded-lg bg-white shadow-sm" style="display: none;">
+                        <p class="text-gray-600 text-sm mb-2">فایل الگوی فعلی:</p>
+                        <p id="current-template-filename-display" class="text-md font-medium text-gray-800"></p>
+                        <p id="current-template-path-display" class="text-xs text-gray-500 mt-2 break-all"></p>
+                    </div>
                 </div>
             </div>
             <div class="flex justify-between items-center mt-6 p-4 border rounded-lg bg-gray-50">
@@ -566,7 +603,7 @@
                             <th class="py-3 px-6 text-right border-b">شناسه</th>
                             <th class="py-3 px-6 text-right border-b">نام</th>
                             <th class="py-3 px-6 text-right border-b">نام خانوادگی</th>
-                            <th class="py-3 px-6 text-right border-b">سازمان</th>
+                            <th class="py-3 px-6 و text-right border-b">سازمان</th>
                         </tr>
                     </thead>
                     <tbody id="select-contact-table-body" class="text-gray-700 text-sm font-light">
@@ -643,6 +680,38 @@
         </div>
     </div>
 
+    <!-- Letter Download Modal -->
+    <div id="letter-download-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-download-modal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">نامه تولید شده و گزینه‌های دانلود</h3>
+            <div id="modal-letter-content" class="text-right">
+                <div id="letter-template-info" class="mb-4">
+                    <p>(اینجا پیش‌نمایش متنی نامه را می‌بینید. برای مشاهده سربرگ و فرمت کامل، فایل DOCX را دانلود کنید.)</p>
+                    <p id="current-template-name-in-modal" class="text-sm text-gray-500 mt-2"></p>
+                </div>
+                <div id="letter-body-display" style="white-space: pre-wrap; line-height: 1.8; font-size: 1rem; color: #333;">
+                    <!-- Generated letter text will be placed here -->
+                </div>
+            </div>
+            <div class="flex justify-center mt-6 space-x-4 flex-wrap gap-2">
+                <button id="download-docx-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200 ease-in-out">
+                    <i class="fas fa-file-word ml-2"></i>دانلود فایل Word (DOCX)
+                </button>
+                <button id="copy-letter-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 ease-in-out">
+                    <i class="fas fa-copy ml-2"></i>کپی متن
+                </button>
+                <button id="download-txt-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out">
+                    <i class="fas fa-file-alt ml-2"></i>دانلود به عنوان فایل متنی
+                </button>
+                <button id="download-pdf-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-200 ease-in-out">
+                    <i class="fas fa-file-pdf ml-2"></i>دانلود به عنوان PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         // Set the base URL for your Flask API.
         // If your Flask app is running on a different port or domain, change this.
@@ -655,12 +724,17 @@
             company_name: null,
             email: null,
             company_short_name: '', // Added for settings
-            company_full_name_footer: '' // Added for settings
+            company_full_name_footer: '', // Added for settings
+            letter_template_path: null // NEW: to store DOCX template path from backend
         };
 
         // Global variables for selected items in CRM tables
         let selectedOrgIdInCrm = null;
         let selectedContactIdInCrm = null;
+
+        // NEW: Global variable for the current generated letter's download URL
+        let currentGeneratedLetterDownloadUrl = '';
+        let currentGeneratedLetterCode = ''; // Also keep for TXT/PDF naming
 
         // Function to show status messages (defined globally to be accessible immediately)
         const showStatus = (message) => {
@@ -811,7 +885,7 @@
 
 
         // --- Tab Switching Logic ---
-        const activateTab = (tabId) => {
+        const activateTab = async (tabId) => {
             console.log('Activating tab:', tabId);
             // Ensure user is logged in before allowing tab switch
             if (!currentUser.company_name) {
@@ -845,20 +919,66 @@
 
                 // Fetch data based on the active tab
                 if (tabId === 'crm') {
-                    fetchOrganizations();
-                    fetchContacts();
+                    await fetchOrganizations();
+                    await fetchContacts();
                 } else if (tabId === 'archive') {
-                    fetchLetters(); // Fetch letters when archive tab is opened
+                    await fetchLetters(); // Fetch letters when archive tab is opened
                 } else if (tabId === 'settings') {
-                    // Populate company info fields from currentUser
-                    const companyShortNameInput = document.getElementById('company-short-name');
-                    const companyFullNameFooterInput = document.getElementById('company-full-name-footer');
-                    if (companyShortNameInput) companyShortNameInput.value = currentUser.company_short_name || '';
-                    if (companyFullNameFooterInput) companyFullNameFooterInput.value = currentUser.company_full_name_footer || '';
+                    // Fetch and populate company settings
+                    await fetchCompanySettings();
                 }
             } else {
                 console.error(`Tab with ID ${tabId} or its corresponding button not found.`);
                 showStatus(`خطا: تب "${tabId}" یافت نشد.`);
+            }
+        };
+
+        // --- Company Settings Functions ---
+        const fetchCompanySettings = async () => {
+            if (!currentUser.company_name) {
+                console.warn('currentUser.company_name is not set. Cannot fetch company settings.');
+                return;
+            }
+            showStatus('در حال بارگذاری تنظیمات شرکت...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const settings = await response.json();
+                
+                // Update currentUser with fetched settings
+                currentUser.company_short_name = settings.company_short_name || '';
+                currentUser.company_full_name_footer = settings.company_full_name_footer || '';
+                currentUser.letter_template_path = settings.letter_template_path || null;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser)); // Persist updated settings
+
+                // Populate company info fields from currentUser
+                const companyShortNameInput = document.getElementById('company-short-name');
+                const companyFullNameFooterInput = document.getElementById('company-full-name-footer');
+                if (companyShortNameInput) companyShortNameInput.value = currentUser.company_short_name || '';
+                if (companyFullNameFooterInput) companyFullNameFooterInput.value = currentUser.company_full_name_footer || '';
+
+                // Populate template preview section
+                const templatePreviewContainer = document.getElementById('template-preview-container');
+                const currentTemplateFilenameDisplay = document.getElementById('current-template-filename-display');
+                const currentTemplatePathDisplay = document.getElementById('current-template-path-display');
+
+                if (currentUser.letter_template_path) {
+                    const filename = currentUser.letter_template_path.split('/').pop().split('\\').pop(); // Get filename from path
+                    currentTemplateFilenameDisplay.textContent = filename;
+                    currentTemplatePathDisplay.textContent = `مسیر ذخیره شده: ${currentUser.letter_template_path}`;
+                    templatePreviewContainer.style.display = 'block';
+                } else {
+                    currentTemplateFilenameDisplay.textContent = 'فایل الگویی انتخاب نشده است.';
+                    currentTemplatePathDisplay.textContent = '';
+                    templatePreviewContainer.style.display = 'none';
+                }
+                showStatus('تنظیمات شرکت بارگذاری شد.');
+            } catch (error) {
+                console.error('Error fetching company settings:', error);
+                showStatus(`خطا در بارگذاری تنظیمات شرکت: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری تنظیمات شرکت: ${error.message}`);
             }
         };
 
@@ -1336,22 +1456,77 @@
                     <td class="py-3 px-6 text-right">${orgName}</td>
                     <td class="py-3 px-6 text-right">${contactName}</td>
                     <td class="py-3 px-6 text-center">
-                        <button class="text-blue-600 hover:text-blue-800 font-medium" onclick="downloadLetter(${letter.id})">باز کردن</button>
+                        <button class="text-blue-600 hover:text-blue-800 font-medium" onclick="openLetterPreviewModal(${letter.id})">باز کردن</button>
                     </td>
                 `;
             });
         };
 
-        // Function to download a letter (made global for onclick)
-        window.downloadLetter = (letterId) => {
+        // Function to open a letter preview from archive (made global for onclick)
+        window.openLetterPreviewModal = async (letterId) => {
             if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
-            showStatus(`در حال دانلود نامه با شناسه ${letterId}...`);
-            // Open the download URL in a new tab/window
-            // This will trigger the browser's download mechanism
-            const downloadUrl = `${API_BASE_URL}/letters/download/${letterId}?company_name=${encodeURIComponent(currentUser.company_name)}`;
-            window.open(downloadUrl, '_blank');
-            showStatus(`درخواست دانلود نامه با شناسه ${letterId} ارسال شد.`);
+            showStatus(`در حال دریافت نامه با شناسه ${letterId}...`);
+            try {
+                const response = await fetch(`${API_BASE_URL}/letters/${letterId}?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const letter = await response.json();
+                
+                // Set global variables for download
+                currentGeneratedLetterCode = letter.letter_code_persian;
+                // Construct download URL for the actual DOCX file
+                currentGeneratedLetterDownloadUrl = `${API_BASE_URL}/letters/download/${letter.id}?company_name=${encodeURIComponent(currentUser.company_name)}`;
+
+                const letterBodyDisplay = document.getElementById('letter-body-display');
+                const letterTemplateInfo = document.getElementById('letter-template-info');
+                const currentTemplateNameInModal = document.getElementById('current-template-name-in-modal');
+
+                // Clear previous content
+                if (letterBodyDisplay) letterBodyDisplay.textContent = '';
+
+                // Update template info in modal
+                if (letterTemplateInfo && currentTemplateNameInModal) {
+                    if (currentUser.letter_template_path) {
+                        const filename = currentUser.letter_template_path.split('/').pop().split('\\').pop();
+                        currentTemplateNameInModal.textContent = `فایل الگوی استفاده شده: ${filename}`;
+                    } else {
+                        currentTemplateNameInModal.textContent = 'فایل الگویی برای این شرکت تنظیم نشده است.';
+                    }
+                }
+
+                // Populate the body content (this is just the text for preview)
+                if (letterBodyDisplay) {
+                    // Combine relevant info for text preview, mimicking the DOCX content structure
+                    const previewText = `
+${letter.date_shamsi_persian}
+${letter.letter_code_persian}
+
+گیرنده: ${letter.organization_name || '---'} - ${letter.first_name || ''} ${letter.last_name || ''}
+موضوع: ${letter.subject}
+
+با سلام و احترام،
+${letter.body}
+
+با احترام،
+${currentUser.company_full_name_footer || currentUser.company_name}
+                    `;
+                    letterBodyDisplay.textContent = previewText;
+                }
+
+                // Show the download modal
+                const letterDownloadModal = document.getElementById('letter-download-modal');
+                if (letterDownloadModal) {
+                    openModal(letterDownloadModal);
+                }
+                showStatus(`نامه با شناسه ${letterId} بارگذاری شد. گزینه‌های دانلود را بررسی کنید.`);
+            } catch (error) {
+                console.error('Error fetching letter for preview:', error);
+                showStatus(`خطا در بارگذاری نامه برای پیش‌نمایش: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری نامه برای پیش‌نمایش: ${error.message}`);
+            }
         };
+
 
         // --- Letter Generation Functions ---
 
@@ -1485,9 +1660,17 @@
             showStatus(`مخاطب "${contactFullName}" انتخاب شد.`);
         };
 
-        // Function to generate a letter
+        // Function to generate a letter (now calls backend for DOCX generation)
         const generateLetter = async () => {
             if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
+            
+            // Check if a template is uploaded
+            if (!currentUser.letter_template_path) {
+                showCustomAlert('لطفاً ابتدا یک فایل الگوی Word (DOCX) را در بخش تنظیمات آپلود کنید.');
+                showStatus('خطا: فایل الگو یافت نشد.');
+                return;
+            }
+
             showStatus('در حال تولید نامه...');
             const subjectInput = document.getElementById('subject');
             const bodyTextarea = document.getElementById('body');
@@ -1496,13 +1679,13 @@
             const selectedContactIdHidden = document.getElementById('selected-contact-id');
 
             const letterData = {
-                company_name: currentUser.company_name, // Include company_name
+                company_name: currentUser.company_name,
                 subject: subjectInput ? subjectInput.value.trim() : '',
                 body: bodyTextarea ? bodyTextarea.value.trim() : '',
                 letter_type: letterTypeSelect ? letterTypeSelect.value : 'GEN',
                 organization_id: selectedOrgIdHidden && selectedOrgIdHidden.value ? parseInt(selectedOrgIdHidden.value) : null,
                 contact_id: selectedContactIdHidden && selectedContactIdHidden.value ? parseInt(selectedContactIdHidden.value) : null,
-                user_id: currentUser.id // Pass the actual user ID
+                user_id: currentUser.id
             };
 
             if (!letterData.subject || !letterData.body) {
@@ -1524,10 +1707,52 @@
                     const errorData = await response.json();
                     throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
                 }
+
                 const result = await response.json();
-                showStatus(`نامه "${result.letter_code}" با موفقیت تولید و ذخیره شد.`);
-                showCustomAlert(`نامه "${result.letter_code}" با موفقیت تولید و ذخیره شد.`);
-                clearLetterForm(); // Clear the form
+                currentGeneratedLetterDownloadUrl = result.download_url;
+                currentGeneratedLetterCode = result.letter_code; // Set for PDF/TXT naming
+
+                // Populate the preview modal with the text content (for quick review)
+                const letterBodyDisplay = document.getElementById('letter-body-display');
+                const letterTemplateInfo = document.getElementById('letter-template-info');
+                const currentTemplateNameInModal = document.getElementById('current-template-name-in-modal');
+
+                if (letterBodyDisplay) {
+                    // Construct a text-based preview from the input data
+                    const previewText = `
+${new Date().toLocaleDateString('fa-IR')}
+${result.letter_code}
+
+گیرنده: ${document.getElementById('org-select').value || '---'} - ${document.getElementById('contact-select').value || '---'}
+موضوع: ${letterData.subject}
+
+با سلام و احترام،
+${letterData.body}
+
+با احترام،
+${currentUser.company_full_name_footer || currentUser.company_name}
+                    `;
+                    letterBodyDisplay.textContent = previewText;
+                }
+                
+                // Update template info in modal
+                if (letterTemplateInfo && currentTemplateNameInModal) {
+                    if (currentUser.letter_template_path) {
+                        const filename = currentUser.letter_template_path.split('/').pop().split('\\').pop();
+                        currentTemplateNameInModal.textContent = `فایل الگوی استفاده شده: ${filename}`;
+                    } else {
+                        currentTemplateNameInModal.textContent = 'فایل الگویی برای این شرکت تنظیم نشده است.';
+                    }
+                }
+
+
+                // Show the download modal
+                const letterDownloadModal = document.getElementById('letter-download-modal');
+                if (letterDownloadModal) {
+                    openModal(letterDownloadModal);
+                }
+                showStatus('نامه با موفقیت تولید شد. برای دانلود فایل Word، پاپ‌آپ را بررسی کنید.');
+                clearLetterForm(); // Clear the form after generation
                 fetchLetters(); // Refresh archive tab
             } catch (error) {
                 console.error('Error generating letter:', error);
@@ -1535,6 +1760,7 @@
                 showCustomAlert(`خطا در تولید نامه: ${error.message}`);
             }
         };
+
 
         // Function to clear letter generation form
         const clearLetterForm = () => {
@@ -1575,6 +1801,19 @@
             }
 
             // Simulate fetching data
+            // In a real app, you'd fetch from your backend:
+            // try {
+            //     const response = await fetch(`${API_BASE_URL}/users?company_name=${encodeURIComponent(currentUser.company_name)}`);
+            //     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            //     const users = await response.json();
+            //     populateUsersTable(users);
+            //     showStatus(`نمایش ${users.length} کاربر.`);
+            // } catch (error) {
+            //     console.error('Error fetching users:', error);
+            //     showStatus(`خطا در بارگذاری کاربران: ${error.message}`);
+            //     showCustomAlert(`خطا در بارگذاری کاربران: ${error.message}`);
+            // }
+
             return new Promise(resolve => {
                 setTimeout(() => {
                     populateUsersTable(simulatedUsers);
@@ -1605,7 +1844,7 @@
                     <td class="py-3 px-6 text-right">${user.id}</td>
                     <td class="py-3 px-6 text-right">${user.email}</td>
                     <td class="py-3 px-6 text-right">${user.role}</td>
-                    <td class="py-3 px-6 text-right">${user.status}</td>
+                    <td class="py-3 px-6 text-right">${user.status || '---'}</td>
                     <td class="py-3 px-6 text-center">
                         <button class="text-blue-600 hover:text-blue-800 font-medium ml-2 ${editButtonDisabled ? disabledClass : ''}" 
                                 onclick="openEditUserModal(${user.id})" ${editButtonDisabled}>ویرایش</button>
@@ -1618,6 +1857,29 @@
 
         const addUser = async (userData) => {
             showStatus('در حال افزودن کاربر...');
+            // In a real app, you'd send to your backend:
+            // try {
+            //     const response = await fetch(`${API_BASE_URL}/users`, {
+            //         method: 'POST',
+            //         headers: { 'Content-Type': 'application/json' },
+            //         body: JSON.stringify({ ...userData, company_name: currentUser.company_name }),
+            //     });
+            //     if (!response.ok) {
+            //         const errorData = await response.json();
+            //         throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+            //     }
+            //     const newUser = await response.json();
+            //     showStatus(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
+            //     showCustomAlert(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
+            //     fetchUsers();
+            //     return true;
+            // } catch (error) {
+            //     console.error('Error adding user:', error);
+            //     showStatus(`خطا در افزودن کاربر: ${error.message}`);
+            //     showCustomAlert(`خطا در افزودن کاربر: ${error.message}`);
+            //     return false;
+            // }
+
             return new Promise(resolve => {
                 setTimeout(() => {
                     const newId = simulatedUsers.length > 0 ? Math.max(...simulatedUsers.map(u => u.id)) + 1 : 1;
@@ -1655,6 +1917,29 @@
         // Function to submit edited user data
         const editUser = async (userData) => {
             showStatus('در حال ویرایش کاربر...');
+            // In a real app, you'd send to your backend:
+            // try {
+            //     const response = await fetch(`${API_BASE_URL}/users/${userData.id}`, {
+            //         method: 'PUT',
+            //         headers: { 'Content-Type': 'application/json' },
+            //         body: JSON.stringify({ ...userData, company_name: currentUser.company_name }),
+            //     });
+            //     if (!response.ok) {
+            //         const errorData = await response.json();
+            //         throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+            //     }
+            //     const updatedUser = await response.json(); // Backend might return updated user
+            //     showStatus(`کاربر "${updatedUser.email}" با موفقیت ویرایش شد.`);
+            //     showCustomAlert(`کاربر "${updatedUser.email}" با موفقیت ویرایش شد.`);
+            //     fetchUsers();
+            //     return true;
+            // } catch (error) {
+            //     console.error('Error editing user:', error);
+            //     showStatus(`خطا در ویرایش کاربر: ${error.message}`);
+            //     showCustomAlert(`خطا در ویرایش کاربر: ${error.message}`);
+            //     return false;
+            // }
+
             return new Promise(resolve => {
                 setTimeout(() => {
                     const index = simulatedUsers.findIndex(u => u.id === userData.id);
@@ -1684,6 +1969,23 @@
                 if (confirmed) {
                     showStatus(`در حال حذف کاربر ${userId}...`);
                     // Simulate API call
+                    // In a real app, you'd send to your backend:
+                    // try {
+                    //     const response = await fetch(`${API_BASE_URL}/users/${userId}?company_name=${encodeURIComponent(currentUser.company_name)}`, {
+                    //         method: 'DELETE',
+                    //     });
+                    //     if (!response.ok) {
+                    //         const errorData = await response.json();
+                    //         throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                    //     }
+                    //     showStatus('کاربر با موفقیت حذف شد.');
+                    //     showCustomAlert('کاربر با موفقیت حذف شد.');
+                    //     fetchUsers();
+                    // } catch (error) {
+                    //     console.error('Error deleting user:', error);
+                    //     showStatus(`خطا در حذف کاربر: ${error.message}`);
+                    //     showCustomAlert(`خطا در حذف کاربر: ${error.message}`);
+                    // }
                     setTimeout(() => {
                         const initialLength = simulatedUsers.length;
                         simulatedUsers = simulatedUsers.filter(u => u.id !== userId);
@@ -1777,14 +2079,27 @@
             const editUserForm = document.getElementById('edit-user-form');
 
 
-            // Header Upload elements
-            const headerUploadInput = document.getElementById('header-upload-input');
-            const headerFileNameSpan = document.getElementById('header-file-name');
-            const uploadHeaderBtn = document.getElementById('upload-header-btn');
+            // Template Upload elements (Settings tab)
+            const templateUploadInput = document.getElementById('template-upload-input');
+            const templateFileNameSpan = document.getElementById('template-file-name');
+            const uploadTemplateBtn = document.getElementById('upload-template-btn');
+            const templatePreviewContainer = document.getElementById('template-preview-container');
+            const currentTemplateFilenameDisplay = document.getElementById('current-template-filename-display');
+            const currentTemplatePathDisplay = document.getElementById('current-template-path-display');
+
 
             // Company Info fields in Settings
             const companyShortNameInput = document.getElementById('company-short-name');
             const companyFullNameFooterInput = document.getElementById('company-full-name-footer');
+
+            // Letter Download Modal elements
+            const letterDownloadModal = document.getElementById('letter-download-modal');
+            const closeDownloadModal = document.getElementById('close-download-modal');
+            const modalLetterContent = document.getElementById('modal-letter-content');
+            const downloadDocxBtn = document.getElementById('download-docx-btn'); // New DOCX download button
+            const copyLetterBtn = document.getElementById('copy-letter-btn');
+            const downloadTxtBtn = document.getElementById('download-txt-btn');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
 
 
             // Retrieve user info from localStorage on page load
@@ -1928,22 +2243,59 @@
 
 
             // --- Settings Tab Specific Event Listeners ---
-            // Header Upload functionality
-            if (uploadHeaderBtn) uploadHeaderBtn.addEventListener('click', () => {
-                if (headerUploadInput.files.length > 0) {
-                    const fileName = headerUploadInput.files[0].name;
-                    showStatus(`فایل "${fileName}" با موفقیت آپلود شد (شبیه‌سازی).`);
-                    showCustomAlert(`فایل "${fileName}" با موفقیت آپلود شد.`);
+            // DOCX Template Upload functionality
+            if (uploadTemplateBtn) uploadTemplateBtn.addEventListener('click', async () => {
+                if (templateUploadInput.files.length > 0) {
+                    const file = templateUploadInput.files[0];
+                    if (!file.name.toLowerCase().endsWith('.docx')) {
+                        showCustomAlert('فقط فایل‌های با پسوند .docx مجاز هستند.');
+                        showStatus('خطا: نوع فایل نامعتبر.');
+                        return;
+                    }
+
+                    showStatus('در حال آپلود فایل الگو...');
+                    const formData = new FormData();
+                    formData.append('letter_template', file);
+                    formData.append('company_name', currentUser.company_name);
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/settings/upload_template`, {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                        }
+
+                        const result = await response.json();
+                        
+                        // Update currentUser with the new template path
+                        currentUser.letter_template_path = result.template_full_path;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser)); // Persist
+                        
+                        currentTemplateFilenameDisplay.textContent = result.template_filename;
+                        currentTemplatePathDisplay.textContent = `مسیر ذخیره شده: ${result.template_full_path}`;
+                        templatePreviewContainer.style.display = 'block';
+
+                        showStatus(`فایل "${result.template_filename}" با موفقیت آپلود و تنظیم شد.`);
+                        showCustomAlert(`فایل "${result.template_filename}" با موفقیت آپلود و تنظیم شد.`);
+                    } catch (error) {
+                        console.error('Error uploading template:', error);
+                        showStatus(`خطا در آپلود فایل الگو: ${error.message}`);
+                        showCustomAlert(`خطا در آپلود فایل الگو: ${error.message}`);
+                    }
                 } else {
-                    showStatus('خطا: لطفاً ابتدا یک فایل برای سربرگ انتخاب کنید.');
-                    showCustomAlert('خطا: لطفاً ابتدا یک فایل برای سربرگ انتخاب کنید.');
+                    showStatus('خطا: لطفاً ابتدا یک فایل برای الگو انتخاب کنید.');
+                    showCustomAlert('خطا: لطفاً ابتدا یک فایل برای الگو انتخاب کنید.');
                 }
             });
-            if (headerUploadInput) headerUploadInput.addEventListener('change', () => {
-                if (headerUploadInput.files.length > 0) {
-                    headerFileNameSpan.textContent = headerUploadInput.files[0].name;
+            if (templateUploadInput) templateUploadInput.addEventListener('change', () => {
+                if (templateUploadInput.files.length > 0) {
+                    templateFileNameSpan.textContent = templateUploadInput.files[0].name;
                 } else {
-                    headerFileNameSpan.textContent = 'فایلی انتخاب نشده است.';
+                    templateFileNameSpan.textContent = 'فایلی انتخاب نشده است.';
                 }
             });
 
@@ -2011,20 +2363,37 @@
             });
 
 
-            // Save settings button (for company info and header upload)
-            if (document.getElementById('save-settings-btn')) document.getElementById('save-settings-btn').addEventListener('click', () => {
+            // Save settings button (for company info and template path)
+            if (document.getElementById('save-settings-btn')) document.getElementById('save-settings-btn').addEventListener('click', async () => {
                 const updatedSettings = {
+                    company_name: currentUser.company_name, // Ensure company_name is sent
                     company_short_name: companyShortNameInput ? companyShortNameInput.value.trim() : '',
                     company_full_name_footer: companyFullNameFooterInput ? companyFullNameFooterInput.value.trim() : '',
-                    // Potentially add logic here to save header file path if needed, but for now, it's just upload action
+                    // letter_template_path is updated via upload_template endpoint, not here
                 };
-                // In a real app, you'd send this to your backend
-                console.log('Saving settings (simulated):', updatedSettings);
-                showStatus('تنظیمات با موفقیت ذخیره شد (شبیه‌سازی).');
-                showCustomAlert('تنظیمات با موفقیت ذخیره شد (شبیه‌سازی).');
-                // Update currentUser in localStorage with new settings
-                currentUser = { ...currentUser, ...updatedSettings };
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showStatus('در حال ذخیره تنظیمات...');
+                try {
+                    const response = await fetch(`${API_BASE_URL}/settings`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedSettings),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                    }
+                    showStatus('تنظیمات با موفقیت ذخیره شد.');
+                    showCustomAlert('تنظیمات با موفقیت ذخیره شد.');
+                    // Re-fetch settings to ensure currentUser is fully updated, including template path if it changed
+                    await fetchCompanySettings();
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                    showStatus(`خطا در ذخیره تنظیمات: ${error.message}`);
+                    showCustomAlert(`خطا در ذخیره تنظیمات: ${error.message}`);
+                }
             });
 
 
@@ -2039,6 +2408,105 @@
                 localStorage.removeItem('currentUser'); // Clear user info
                 window.location.href = '/'; // Redirect to login page
             });
+
+
+            // Letter Download Modal Event Listeners
+            if (closeDownloadModal) {
+                closeDownloadModal.addEventListener('click', () => {
+                    closeModal(letterDownloadModal);
+                });
+            }
+
+            // NEW: Download DOCX button
+            if (downloadDocxBtn) {
+                downloadDocxBtn.addEventListener('click', () => {
+                    if (currentGeneratedLetterDownloadUrl) {
+                        // Trigger the download by navigating to the URL
+                        const a = document.createElement('a');
+                        a.href = currentGeneratedLetterDownloadUrl;
+                        a.download = `${currentGeneratedLetterCode}.docx`; // Suggest a filename
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        showStatus('فایل Word (DOCX) دانلود شد!');
+                    } else {
+                        showCustomAlert('فایل DOCX برای دانلود وجود ندارد.');
+                    }
+                });
+            }
+
+            if (copyLetterBtn) {
+                copyLetterBtn.addEventListener('click', () => {
+                    // Copy only the text content of the letter body
+                    const textToCopy = document.getElementById('letter-body-display').textContent;
+                    if (textToCopy) {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = textToCopy;
+                        textarea.style.position = 'fixed'; 
+                        textarea.style.opacity = 0; 
+                        document.body.appendChild(textarea);
+                        textarea.focus();
+                        textarea.select();
+                        try {
+                            const successful = document.execCommand('copy');
+                            if (successful) {
+                                showStatus('متن نامه کپی شد!');
+                            } else {
+                                showCustomAlert('خطا در کپی کردن متن. لطفاً به صورت دستی کپی کنید.');
+                            }
+                        } catch (err) {
+                            showCustomAlert('خطا در کپی کردن متن. لطفاً به صورت دستی کپی کنید.');
+                            console.error('Fallback: Oops, unable to copy', err);
+                        }
+                        document.body.removeChild(textarea);
+                    } else {
+                        showCustomAlert('متنی برای کپی وجود ندارد.');
+                    }
+                });
+            }
+
+            if (downloadTxtBtn) {
+                downloadTxtBtn.addEventListener('click', () => {
+                    const textToDownload = document.getElementById('letter-body-display').textContent; 
+                    const fileName = currentGeneratedLetterCode ? `${currentGeneratedLetterCode}.txt` : 'نامه_تولید_شده.txt';
+                    if (textToDownload) {
+                        const blob = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        showStatus('نامه به عنوان فایل متنی دانلود شد!');
+                    } else {
+                        showCustomAlert('متنی برای دانلود وجود ندارد.');
+                    }
+                });
+            }
+
+            if (downloadPdfBtn) {
+                downloadPdfBtn.addEventListener('click', () => {
+                    const element = document.getElementById('modal-letter-content'); // Target the whole modal content for PDF
+                    const fileName = currentGeneratedLetterCode ? `${currentGeneratedLetterCode}.pdf` : 'نامه_تولید_شده.pdf';
+                    if (element && element.textContent.trim() !== '') {
+                        showStatus('در حال تولید PDF...');
+                        html2pdf().from(element).set({
+                            margin: [10, 10, 10, 10], 
+                            filename: fileName,
+                            html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        }).save().then(() => {
+                            showStatus('نامه به عنوان PDF دانلود شد!');
+                        }).catch(error => {
+                            showCustomAlert('خطا در تولید PDF: ' + error.message);
+                            console.error('Error generating PDF:', error);
+                        });
+                    } else {
+                        showCustomAlert('متنی برای تولید PDF وجود ندارد.');
+                    }
+                });
+            }
+
         });
     </script>
 </body>
