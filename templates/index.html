@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم مدیریت نامه‌نگاری و CRM</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font (for a modern look) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-button.active {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
+            border-radius: 0.5rem 0.5rem 0 0; /* Rounded top corners */
+        }
+        .tab-button {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #e0e7ff; /* Indigo 100 */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto; /* Centered */
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 0.75rem; /* Tailwind rounded-lg */
+            width: 80%; /* Could be responsive */
+            max-width: 500px; /* Max width for larger screens */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Tailwind shadow-lg */
+        }
+        .close-button {
+            color: #aaa;
+            float: left; /* Position to the top right */
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Table specific styles for modals */
+        .modal-table-container {
+            max-height: 250px; /* Limit height of table in modal */
+            overflow-y: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .modal-table th, .modal-table td {
+            padding: 0.75rem 1.5rem;
+            text-align: right;
+            border-bottom: 1px solid #e2e8f0; /* gray-200 */
+        }
+        .modal-table th {
+            background-color: #f8fafc; /* gray-50 */
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: #4a5568; /* gray-700 */
+        }
+        .modal-table tr:hover {
+            background-color: #f0f4f8; /* blue-50 */
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <div class="flex-grow container mx-auto p-6 bg-white shadow-lg rounded-lg my-8">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">سیستم مدیریت نامه‌نگاری و CRM</h1>
+
+        <!-- Tabs Navigation -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button class="tab-button px-6 py-3 text-lg font-medium text-gray-700 hover:text-indigo-600 focus:outline-none" data-tab="letter">
+                <i class="fas fa-file-alt ml-2"></i>تولید نامه
+            </button>
+            <button class="tab-button px-6 py-3 text-lg font-medium text-gray-700 hover:text-indigo-600 focus:outline-none" data-tab="archive">
+                <i class="fas fa-archive ml-2"></i>آرشیو نامه‌ها
+            </button>
+            <button class="tab-button px-6 py-3 text-lg font-medium text-gray-700 hover:text-indigo-600 focus:outline-none" data-tab="crm">
+                <i class="fas fa-users ml-2"></i>مدیریت مشتریان و مخاطبین
+            </button>
+            <button class="tab-button px-6 py-3 text-lg font-medium text-gray-700 hover:text-indigo-600 focus:outline-none" data-tab="settings">
+                <i class="fas fa-cog ml-2"></i>تنظیمات
+            </button>
+        </div>
+
+        <!-- Tab Content: تولید نامه -->
+        <div id="letter" class="tab-content p-4">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">تولید نامه جدید</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="org-select" class="block text-gray-700 text-sm font-bold mb-2">سازمان:</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="org-select" class="shadow appearance-none border rounded-md flex-1 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="سازمان انتخاب شده" readonly>
+                        <button id="select-org-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-md focus:outline-none focus:shadow-outline transition duration-200 flex-1">انتخاب سازمان</button>
+                    </div>
+                    <!-- Hidden fields to store selected IDs -->
+                    <input type="hidden" id="selected-org-id">
+                </div>
+                <div>
+                    <label for="contact-select" class="block text-gray-700 text-sm font-bold mb-2">مخاطب:</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="contact-select" class="shadow appearance-none border rounded-md flex-1 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="مخاطب انتخاب شده" readonly>
+                        <button id="select-contact-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-md focus:outline-none focus:shadow-outline transition duration-200 flex-1">انتخاب مخاطب</button>
+                    </div>
+                    <!-- Hidden fields to store selected IDs -->
+                    <input type="hidden" id="selected-contact-id">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="letter-type" class="block text-gray-700 text-sm font-bold mb-2">نوع نامه:</label>
+                <select id="letter-type" class="shadow border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="GEN">عمومی</option>
+                    <option value="FIN">مالی</option>
+                    <option value="HR">منابع انسانی</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="subject" class="block text-gray-700 text-sm font-bold mb-2">موضوع نامه:</label>
+                <input type="text" id="subject" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="موضوع نامه را وارد کنید">
+            </div>
+
+            <div class="mb-6">
+                <label for="body" class="block text-gray-700 text-sm font-bold mb-2">متن نامه:</label>
+                <textarea id="body" rows="10" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="متن اصلی نامه را اینجا وارد کنید"></textarea>
+            </div>
+
+            <button id="generate-letter-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-md focus:outline-none focus:shadow-outline transition duration-200">
+                تولید نامه
+            </button>
+        </div>
+
+        <!-- Tab Content: آرشیو نامه‌ها -->
+        <div id="archive" class="tab-content p-4">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">آرشیو نامه‌ها</h2>
+            <div class="mb-4 flex items-center space-x-2 rtl:space-x-reverse">
+                <label for="archive-search" class="block text-gray-700 text-sm font-bold ml-2">جستجو:</label>
+                <input type="text" id="archive-search" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="جستجو بر اساس کد، موضوع، سازمان یا مخاطب">
+                <button id="archive-search-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">جستجو</button>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg shadow-md">
+                <table class="min-w-full bg-white border border-gray-200">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-right border-b">کد نامه</th>
+                            <th class="py-3 px-6 text-right border-b">نوع</th>
+                            <th class="py-3 px-6 text-right border-b">تاریخ</th>
+                            <th class="py-3 px-6 text-right border-b">موضوع</th>
+                            <th class="py-3 px-6 text-right border-b">سازمان</th>
+                            <th class="py-3 px-6 text-right border-b">مخاطب</th>
+                            <th class="py-3 px-6 text-center border-b">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive-table-body" class="text-gray-700 text-sm font-light">
+                        <!-- Letters will be dynamically loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Content: مدیریت مشتریان و مخاطبین -->
+        <div id="crm" class="tab-content p-4">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">مدیریت مشتریان و مخاطبین</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Organizations Section -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-3">سازمان‌ها</h3>
+                    <div class="mb-4 flex items-center space-x-2 rtl:space-x-reverse">
+                        <label for="org-crm-search" class="block text-gray-700 text-sm font-bold ml-2">جستجو:</label>
+                        <input type="text" id="org-crm-search" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="جستجوی سازمان">
+                        <button id="org-crm-search-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">جستجو</button>
+                    </div>
+                    <div class="flex justify-end space-x-2 rtl:space-x-reverse mb-4">
+                        <button id="add-org-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">افزودن سازمان</button>
+                        <button id="edit-org-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">ویرایش سازمان</button>
+                        <button id="delete-org-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">حذف سازمان</button>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-right border-b">شناسه</th>
+                                    <th class="py-3 px-6 text-right border-b">نام سازمان</th>
+                                    <th class="py-3 px-6 text-right border-b">صنعت</th>
+                                    <th class="py-3 px-6 text-right border-b">تلفن</th>
+                                    <th class="py-3 px-6 text-right border-b">ایمیل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="org-table-body" class="text-gray-700 text-sm font-light">
+                                <!-- Organizations will be dynamically loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Contacts Section -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-3">مخاطبین</h3>
+                    <div class="mb-4 flex items-center space-x-2 rtl:space-x-reverse">
+                        <label for="contact-crm-search" class="block text-gray-700 text-sm font-bold ml-2">جستجو:</label>
+                        <input type="text" id="contact-crm-search" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="جستجوی مخاطب">
+                        <button id="contact-crm-search-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">جستجو</button>
+                    </div>
+                    <div class="flex justify-end space-x-2 rtl:space-x-reverse mb-4">
+                        <button id="add-contact-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">افزودن مخاطب</button>
+                        <button id="edit-contact-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">ویرایش مخاطب</button>
+                        <button id="delete-contact-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">حذف مخاطب</button>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-right border-b">شناسه</th>
+                                    <th class="py-3 px-6 text-right border-b">نام</th>
+                                    <th class="py-3 px-6 text-right border-b">نام خانوادگی</th>
+                                    <th class="py-3 px-6 text-right border-b">سازمان</th>
+                                    <th class="py-3 px-6 text-right border-b">تلفن</th>
+                                    <th class="py-3 px-6 text-right border-b">ایمیل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contact-table-body" class="text-gray-700 text-sm font-light">
+                                <!-- Contacts will be dynamically loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: تنظیمات -->
+        <div id="settings" class="tab-content p-4">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">تنظیمات برنامه</h2>
+            <div class="grid grid-cols-1 gap-6 mb-6">
+                <!-- Company Info Section -->
+                <div class="mb-6 pt-4 mt-4">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">اطلاعات شرکت در سربرگ</h3>
+                    <div class="mb-4">
+                        <label for="company-short-name" class="block text-gray-700 text-sm font-bold mb-2">نام اختصاری شرکت (کد نامه‌):</label>
+                        <input type="text" id="company-short-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="مثال: شرکت الف">
+                    </div>
+                    <div class="mb-4">
+                        <label for="company-full-name-footer" class="block text-gray-700 text-sm font-bold mb-2">نام کامل شرکت (در پابرگ نامه):</label>
+                        <input type="text" id="company-full-name-footer" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="مثال: شرکت توسعه فناوری اطلاعات الفبا">
+                    </div>
+                </div>
+
+                <!-- Header Upload Section -->
+                <div class="mb-6 pt-4 mt-4">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">آپلود سربرگ</h3>
+                    <div class="flex items-center">
+                        <input type="file" id="header-upload-input" accept="image/*,application/pdf" class="hidden">
+                        <label for="header-upload-input" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-150 ease-in-out">
+                            <i class="fas fa-upload ml-2"></i> انتخاب فایل سربرگ
+                        </label>
+                        <span id="header-file-name" class="ml-3 text-gray-600">فایلی انتخاب نشده است.</span>
+                    </div>
+                    <button id="upload-header-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg mt-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-150 ease-in-out">
+                        <i class="fas fa-cloud-upload-alt ml-2"></i> آپلود سربرگ
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-6 p-4 border rounded-lg bg-gray-50">
+                <h3 class="text-xl font-semibold text-gray-700">مدیریت حساب کاربری</h3>
+                <div class="flex space-x-4 rtl:space-x-reverse">
+                    <button id="manage-users-btn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">مدیریت کاربران</button>
+                    <button id="change-password-btn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">تغییر رمز عبور من</button>
+                </div>
+            </div>
+            <button id="save-settings-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md focus:outline-none focus:shadow-outline mt-6 transition duration-200">
+                ذخیره تنظیمات
+            </button>
+
+            <!-- Manage Users Section (initially hidden) -->
+            <div id="manage-users-section" class="hidden mt-8 p-6 bg-white rounded-lg shadow-md border border-gray-200">
+                <h3 class="text-2xl font-semibold text-gray-700 mb-4">مدیریت کاربران سیستم</h3>
+                <button id="add-user-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200 mb-4">
+                    <i class="fas fa-user-plus ml-2"></i> افزودن کاربر جدید
+                </button>
+                <div class="overflow-x-auto rounded-lg shadow-md">
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-right border-b">شناسه</th>
+                                <th class="py-3 px-6 text-right border-b">ایمیل</th>
+                                <th class="py-3 px-6 text-right border-b">نقش</th>
+                                <th class="py-3 px-6 text-right border-b">وضعیت</th>
+                                <th class="py-3 px-6 text-center border-b">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="text-gray-700 text-sm font-light">
+                            <!-- Users will be dynamically loaded here -->
+                            <tr><td colspan="5" class="py-3 px-6 text-center text-gray-500">کاربری یافت نشد.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar at the bottom -->
+    <div id="status-bar" class="w-full bg-gray-800 text-white text-sm py-2 px-6 text-right">
+        آماده به کار
+    </div>
+
+    <!-- Add Organization Modal -->
+    <div id="addOrgModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeAddOrgModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">افزودن سازمان جدید</h3>
+            <form id="add-org-form">
+                <div class="mb-4">
+                    <label for="new-org-name" class="block text-gray-700 text-sm font-bold mb-2">نام سازمان:</label>
+                    <input type="text" id="new-org-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="new-org-industry" class="block text-gray-700 text-sm font-bold mb-2">صنعت:</label>
+                    <input type="text" id="new-org-industry" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="new-org-phone" class="block text-gray-700 text-sm font-bold mb-2">تلفن:</label>
+                    <input type="text" id="new-org-phone" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="new-org-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label>
+                    <input type="email" id="new-org-email" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="new-org-address" class="block text-gray-700 text-sm font-bold mb-2">آدرس:</label>
+                    <input type="text" id="new-org-address" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-6">
+                    <label for="new-org-description" class="block text-gray-700 text-sm font-bold mb-2">توضیحات:</label>
+                    <textarea id="new-org-description" rows="3" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">افزودن</button>
+                    <button type="button" id="cancel-add-org" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Organization Modal -->
+    <div id="editOrgModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeEditOrgModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">ویرایش سازمان</h3>
+            <form id="edit-org-form">
+                <input type="hidden" id="edit-org-id">
+                <div class="mb-4">
+                    <label for="edit-org-name" class="block text-gray-700 text-sm font-bold mb-2">نام سازمان:</label>
+                    <input type="text" id="edit-org-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-org-industry" class="block text-gray-700 text-sm font-bold mb-2">صنعت:</label>
+                    <input type="text" id="edit-org-industry" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-org-phone" class="block text-gray-700 text-sm font-bold mb-2">تلفن:</label>
+                    <input type="text" id="edit-org-phone" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-org-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label>
+                    <input type="email" id="edit-org-email" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-org-address" class="block text-gray-700 text-sm font-bold mb-2">آدرس:</label>
+                    <input type="text" id="edit-org-address" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-6">
+                    <label for="edit-org-description" class="block text-gray-700 text-sm font-bold mb-2">توضیحات:</label>
+                    <textarea id="edit-org-description" rows="3" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">ذخیره</button>
+                    <button type="button" id="cancel-edit-org" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Add Contact Modal -->
+    <div id="addContactModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeAddContactModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">افزودن مخاطب جدید</h3>
+            <form id="add-contact-form">
+                <div class="mb-4">
+                    <label for="new-contact-first-name" class="block text-gray-700 text-sm font-bold mb-2">نام:</label>
+                    <input type="text" id="new-contact-first-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="new-contact-last-name" class="block text-gray-700 text-sm font-bold mb-2">نام خانوادگی:</label>
+                    <input type="text" id="new-contact-last-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="new-contact-title" class="block text-gray-700 text-sm font-bold mb-2">عنوان/سمت:</label>
+                    <input type="text" id="new-contact-title" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="new-contact-org-id" class="block text-gray-700 text-sm font-bold mb-2">سازمان مرتبط:</label>
+                    <select id="new-contact-org-id" class="shadow border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="new-contact-phone" class="block text-gray-700 text-sm font-bold mb-2">تلفن:</label>
+                    <input type="text" id="new-contact-phone" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="new-contact-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label>
+                    <input type="email" id="new-contact-email" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-6">
+                    <label for="new-contact-notes" class="block text-gray-700 text-sm font-bold mb-2">یادداشت‌ها:</label>
+                    <textarea id="new-contact-notes" rows="3" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">افزودن</button>
+                    <button type="button" id="cancel-add-contact" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Contact Modal -->
+    <div id="editContactModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeEditContactModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">ویرایش مخاطب</h3>
+            <form id="edit-contact-form">
+                <input type="hidden" id="edit-contact-id">
+                <div class="mb-4">
+                    <label for="edit-contact-first-name" class="block text-gray-700 text-sm font-bold mb-2">نام:</label>
+                    <input type="text" id="edit-contact-first-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-contact-last-name" class="block text-gray-700 text-sm font-bold mb-2">نام خانوادگی:</label>
+                    <input type="text" id="edit-contact-last-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-contact-title" class="block text-gray-700 text-sm font-bold mb-2">عنوان/سمت:</label>
+                    <input type="text" id="edit-contact-title" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-contact-org-id" class="block text-gray-700 text-sm font-bold mb-2">سازمان مرتبط:</label>
+                    <select id="edit-contact-org-id" class="shadow border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-contact-phone" class="block text-gray-700 text-sm font-bold mb-2">تلفن:</label>
+                    <input type="text" id="edit-contact-phone" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="edit-contact-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label>
+                    <input type="email" id="edit-contact-email" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-6">
+                    <label for="edit-contact-notes" class="block text-gray-700 text-sm font-bold mb-2">یادداشت‌ها:</label>
+                    <textarea id="edit-contact-notes" rows="3" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">ذخیره</button>
+                    <button type="button" id="cancel-edit-contact" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Select Organization Modal -->
+    <div id="selectOrgModal" class="modal">
+        <div class="modal-content max-w-2xl">
+            <span class="close-button" id="closeSelectOrgModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">انتخاب سازمان</h3>
+            <div class="mb-4 flex items-center space-x-2 rtl:space-x-reverse">
+                <label for="select-org-search" class="block text-gray-700 text-sm font-bold ml-2">جستجو:</label>
+                <input type="text" id="select-org-search" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="جستجوی سازمان">
+                <button id="select-org-search-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">جستجو</button>
+            </div>
+            <div class="modal-table-container">
+                <table class="min-w-full bg-white modal-table">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-right border-b">شناسه</th>
+                            <th class="py-3 px-6 text-right border-b">نام سازمان</th>
+                            <th class="py-3 px-6 text-right border-b">صنعت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="select-org-table-body" class="text-gray-700 text-sm font-light">
+                        <!-- Organizations will be dynamically loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse mt-4">
+                <button type="button" id="cancel-select-org" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Select Contact Modal -->
+    <div id="selectContactModal" class="modal">
+        <div class="modal-content max-w-2xl">
+            <span class="close-button" id="closeSelectContactModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">انتخاب مخاطب</h3>
+            <div class="mb-4 flex items-center space-x-2 rtl:space-x-reverse">
+                <label for="select-contact-search" class="block text-gray-700 text-sm font-bold mb-2">جستجو:</label>
+                <input type="text" id="select-contact-search" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="جستجوی مخاطب">
+                <button id="select-contact-search-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">جستجو</button>
+            </div>
+            <div class="modal-table-container">
+                <table class="min-w-full bg-white modal-table">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-right border-b">شناسه</th>
+                            <th class="py-3 px-6 text-right border-b">نام</th>
+                            <th class="py-3 px-6 text-right border-b">نام خانوادگی</th>
+                            <th class="py-3 px-6 text-right border-b">سازمان</th>
+                        </tr>
+                    </thead>
+                    <tbody id="select-contact-table-body" class="text-gray-700 text-sm font-light">
+                        <!-- Contacts will be dynamically loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end space-x-2 rtl:space-x-reverse mt-4">
+                <button type="button" id="cancel-select-contact" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeAddUserModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">افزودن کاربر جدید</h3>
+            <form id="add-user-form">
+                <div class="mb-4">
+                    <label for="new-user-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل (نام کاربری):</label>
+                    <input type="email" id="new-user-email" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="new-user-password" class="block text-gray-700 text-sm font-bold mb-2">رمز عبور:</label>
+                    <input type="password" id="new-user-password" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="new-user-confirm-password" class="block text-gray-700 text-sm font-bold mb-2">تایید رمز عبور:</label>
+                    <input type="password" id="new-user-confirm-password" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="new-user-role" class="block text-gray-700 text-sm font-bold mb-2">نقش:</label>
+                    <select id="new-user-role" class="shadow border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="user">کاربر عادی</option>
+                        <option value="admin">ادمین</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="new-user-company-name" class="block text-gray-700 text-sm font-bold mb-2">نام شرکت:</label>
+                    <input type="text" id="new-user-company-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight bg-gray-100 cursor-not-allowed" readonly>
+                </div>
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">افزودن کاربر</button>
+                    <button type="button" id="cancel-add-user" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeEditUserModal">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">ویرایش کاربر</h3>
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <div class="mb-4">
+                    <label for="edit-user-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل (نام کاربری):</label>
+                    <input type="email" id="edit-user-email" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-user-role" class="block text-gray-700 text-sm font-bold mb-2">نقش:</label>
+                    <select id="edit-user-role" class="shadow border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="user">کاربر عادی</option>
+                        <option value="admin">ادمین</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">ذخیره</button>
+                    <button type="button" id="cancel-edit-user" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Set the base URL for your Flask API.
+        // If your Flask app is running on a different port or domain, change this.
+        const API_BASE_URL = 'http://localhost:5000/api'; 
+        
+        // Global variables to store user and company info after login
+        let currentUser = {
+            id: null,
+            role: null,
+            company_name: null,
+            email: null,
+            company_short_name: '', // Added for settings
+            company_full_name_footer: '' // Added for settings
+        };
+
+        // Global variables for selected items in CRM tables
+        let selectedOrgIdInCrm = null;
+        let selectedContactIdInCrm = null;
+
+        // Function to show status messages (defined globally to be accessible immediately)
+        const showStatus = (message) => {
+            const statusBar = document.getElementById('status-bar');
+            if (statusBar) {
+                statusBar.textContent = message;
+                console.log('Status:', message);
+            } else {
+                console.warn('Status bar element not found. Message:', message);
+            }
+        };
+
+        // --- Custom Alert/Confirm Modals (Replaces alert() and confirm()) ---
+        function showCustomAlert(message) {
+            const modalHtml = `
+                <div id="custom-alert-modal" class="modal">
+                    <div class="modal-content max-w-sm">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">پیام</h3>
+                        <p class="text-gray-700 mb-6">${message}</p>
+                        <div class="flex justify-end">
+                            <button id="alert-ok-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">باشه</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const customAlertModal = document.getElementById('custom-alert-modal');
+            openModal(customAlertModal);
+            document.getElementById('alert-ok-btn').addEventListener('click', () => {
+                closeModal(customAlertModal);
+                customAlertModal.remove(); // Remove from DOM after closing
+            });
+        }
+
+        function showCustomConfirm(message, callback) {
+            const modalHtml = `
+                <div id="custom-confirm-modal" class="modal">
+                    <div class="modal-content max-w-sm">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">تایید</h3>
+                        <p class="text-gray-700 mb-6">${message}</p>
+                        <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                            <button id="confirm-yes-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">بله</button>
+                            <button id="confirm-no-btn" class="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">خیر</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const customConfirmModal = document.getElementById('custom-confirm-modal');
+            openModal(customConfirmModal);
+
+            document.getElementById('confirm-yes-btn').addEventListener('click', () => {
+                closeModal(customConfirmModal);
+                customConfirmModal.remove();
+                callback(true);
+            });
+            document.getElementById('confirm-no-btn').addEventListener('click', () => {
+                closeModal(customConfirmModal);
+                customConfirmModal.remove();
+                callback(false);
+            });
+        }
+
+
+        // --- Modal Management (Generic) ---
+        function openModal(modalElement) {
+            console.log(`Opening modal: ${modalElement.id}`);
+            modalElement.style.display = 'flex';
+        }
+
+        function closeModal(modalElement) {
+            console.log(`Closing modal: ${modalElement.id}`);
+            modalElement.style.display = 'none';
+            // Reset forms when closing
+            if (modalElement.id === 'addOrgModal') document.getElementById('add-org-form').reset();
+            if (modalElement.id === 'editOrgModal') document.getElementById('edit-org-form').reset();
+            if (modalElement.id === 'addContactModal') document.getElementById('add-contact-form').reset();
+            if (modalElement.id === 'editContactModal') document.getElementById('edit-contact-form').reset();
+            if (modalElement.id === 'selectOrgModal') document.getElementById('select-org-search').value = '';
+            if (modalElement.id === 'selectContactModal') document.getElementById('select-contact-search').value = '';
+            // Reset Add User form on close
+            if (modalElement.id === 'addUserModal') document.getElementById('add-user-form').reset();
+            // Reset Edit User form on close
+            if (modalElement.id === 'editUserModal') document.getElementById('edit-user-form').reset();
+        }
+
+        // Close modal if clicked outside content
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target);
+            }
+        });
+
+
+        // --- Apply User Permissions ---
+        const applyUserPermissions = () => {
+            console.log('Applying user permissions for role:', currentUser.role);
+            const settingsTabButton = document.querySelector('.tab-button[data-tab="settings"]');
+            if (settingsTabButton) {
+                if (currentUser.role === 'user') {
+                    settingsTabButton.style.display = 'none'; // Hide tab button
+                    // If settings tab is active, switch to another tab
+                    if (document.getElementById('settings').classList.contains('active')) {
+                        activateTab('letter'); // Switch to letter tab
+                    }
+                } else {
+                    settingsTabButton.style.display = 'flex'; // Show tab button for admin/superadmin
+                }
+            }
+
+            // Control CRM buttons based on role
+            const addOrgBtn = document.getElementById('add-org-btn');
+            const editOrgBtn = document.getElementById('edit-org-btn');
+            const deleteOrgBtn = document.getElementById('delete-org-btn');
+            const addContactBtn = document.getElementById('add-contact-btn');
+            const editContactBtn = document.getElementById('edit-contact-btn');
+            const deleteContactBtn = document.getElementById('delete-contact-btn');
+
+            const crmButtons = [addOrgBtn, editOrgBtn, deleteOrgBtn, addContactBtn, editContactBtn, deleteContactBtn];
+            crmButtons.forEach(btn => {
+                if (btn) { // Ensure button exists before trying to access properties
+                    if (currentUser.role !== 'admin') {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            });
+
+            // Control Manage Users button based on role (only admin/superadmin can see/use)
+            const manageUsersBtn = document.getElementById('manage-users-btn');
+            if (manageUsersBtn) {
+                if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
+                    manageUsersBtn.style.display = 'inline-block'; // Show
+                } else {
+                    manageUsersBtn.style.display = 'none'; // Hide
+                    // If manage users section is active, hide it
+                    const manageUsersSection = document.getElementById('manage-users-section');
+                    if (manageUsersSection && manageUsersSection.classList.contains('active')) {
+                        manageUsersSection.classList.remove('active');
+                        manageUsersSection.classList.add('hidden');
+                    }
+                }
+            }
+        };
+
+
+        // --- Tab Switching Logic ---
+        const activateTab = (tabId) => {
+            console.log('Activating tab:', tabId);
+            // Ensure user is logged in before allowing tab switch
+            if (!currentUser.company_name) {
+                showCustomAlert('لطفاً ابتدا وارد سیستم شوید.');
+                window.location.href = '/'; // Redirect to login page
+                return;
+            }
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            // Remove 'active' class from all buttons and hide all content
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Add 'active' class to the clicked button
+            const targetButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+            const targetContent = document.getElementById(tabId);
+
+            if (targetButton && targetContent) {
+                targetButton.classList.add('active');
+                targetContent.classList.add('active');
+                showStatus(`تب "${targetButton.textContent.trim()}" فعال شد.`);
+
+                // Hide manage users section if not in settings tab
+                const manageUsersSection = document.getElementById('manage-users-section');
+                if (manageUsersSection && tabId !== 'settings') {
+                    manageUsersSection.classList.add('hidden');
+                }
+
+
+                // Fetch data based on the active tab
+                if (tabId === 'crm') {
+                    fetchOrganizations();
+                    fetchContacts();
+                } else if (tabId === 'archive') {
+                    fetchLetters(); // Fetch letters when archive tab is opened
+                } else if (tabId === 'settings') {
+                    // Populate company info fields from currentUser
+                    const companyShortNameInput = document.getElementById('company-short-name');
+                    const companyFullNameFooterInput = document.getElementById('company-full-name-footer');
+                    if (companyShortNameInput) companyShortNameInput.value = currentUser.company_short_name || '';
+                    if (companyFullNameFooterInput) companyFullNameFooterInput.value = currentUser.company_full_name_footer || '';
+                }
+            } else {
+                console.error(`Tab with ID ${tabId} or its corresponding button not found.`);
+                showStatus(`خطا: تب "${tabId}" یافت نشد.`);
+            }
+        };
+
+
+        // --- Organization Management Functions (CRM Tab) ---
+
+        // Function to fetch organizations from backend API
+        const fetchOrganizations = async (searchTerm = '') => {
+            if (!currentUser.company_name) {
+                console.warn('currentUser.company_name is not set. Cannot fetch organizations.');
+                return;
+            }
+            showStatus('در حال بارگذاری سازمان‌ها...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/organizations?company_name=${encodeURIComponent(currentUser.company_name)}&search=${encodeURIComponent(searchTerm)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const organizations = await response.json();
+                populateOrganizationsTable(organizations); // For CRM tab
+                populateOrgSelectForContacts(organizations); // For Add/Edit Contact modal dropdowns
+                showStatus(`نمایش ${organizations.length} سازمان.`);
+            } catch (error) {
+                console.error('Error fetching organizations:', error);
+                showStatus(`خطا در بارگذاری سازمان‌ها: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری سازمان‌ها: ${error.message}`);
+            }
+        };
+
+        // Function to populate the organizations table (CRM tab)
+        const populateOrganizationsTable = (organizations) => {
+            const orgTableBody = document.getElementById('org-table-body');
+            if (!orgTableBody) { console.error('orgTableBody not found'); return; }
+            orgTableBody.innerHTML = ''; // Clear existing rows
+            if (organizations.length === 0) {
+                orgTableBody.innerHTML = `<tr><td colspan="5" class="py-3 px-6 text-center text-gray-500">هیچ سازمانی یافت نشد.</td></tr>`;
+                return;
+            }
+            organizations.forEach(org => {
+                const row = orgTableBody.insertRow();
+                row.className = 'border-b border-gray-200 hover:bg-gray-50 cursor-pointer';
+                row.dataset.id = org.id; // Store ID for selection
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-right">${org.id}</td>
+                    <td class="py-3 px-6 text-right">${org.name}</td>
+                    <td class="py-3 px-6 text-right">${org.industry || '---'}</td>
+                    <td class="py-3 px-6 text-right">${org.phone || '---'}</td>
+                    <td class="py-3 px-6 text-right">${org.email || '---'}</td>
+                `;
+                row.addEventListener('click', () => selectOrgRowInCrm(org.id));
+            });
+        };
+
+        // Select row in CRM organization table
+        const selectOrgRowInCrm = (orgId) => {
+            // Remove selection from all rows
+            document.querySelectorAll('#org-table-body tr').forEach(row => {
+                row.classList.remove('bg-blue-100');
+            });
+            // Add selection to the clicked row
+            const selectedRow = document.querySelector(`#org-table-body tr[data-id="${orgId}"]`);
+            if (selectedRow) {
+                selectedRow.classList.add('bg-blue-100');
+                selectedOrgIdInCrm = orgId;
+                showStatus(`سازمان با شناسه ${orgId} انتخاب شد.`);
+                fetchContacts('', orgId); // Load contacts related to selected organization
+            } else {
+                selectedOrgIdInCrm = null;
+                showStatus('سازمانی انتخاب نشده است.');
+            }
+        };
+
+        // Function to add a new organization
+        const addOrganization = async (orgData) => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return false; }
+            showStatus('در حال افزودن سازمان...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/organizations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ...orgData, company_name: currentUser.company_name }), // Include company_name
+                });
+
+                if (response.status === 409) { // Conflict - Organization name already exists
+                    const errorData = await response.json();
+                    showCustomAlert(`خطا: ${errorData.message}`);
+                    showStatus(`خطا: ${errorData.message}`);
+                    return false; // Indicate failure
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const newOrg = await response.json();
+                showStatus(`سازمان "${newOrg.name}" با موفقیت افزوده شد.`);
+                showCustomAlert(`سازمان "${newOrg.name}" با موفقیت افزوده شد.`);
+                fetchOrganizations(); // Refresh the list
+                fetchContacts(); // Also refresh contacts in case new org affects them
+                return true; // Indicate success
+            } catch (error) {
+                console.error('Error adding organization:', error);
+                showStatus(`خطا در افزودن سازمان: ${error.message}`);
+                showCustomAlert(`خطا در افزودن سازمان: ${error.message}`);
+                return false; // Indicate failure
+            }
+        };
+
+        // Function to open edit organization modal and populate data
+        const openEditOrganizationModal = async () => {
+            if (!selectedOrgIdInCrm) {
+                showCustomAlert('لطفاً یک سازمان را برای ویرایش انتخاب کنید.');
+                return;
+            }
+            showStatus('در حال بارگذاری اطلاعات سازمان برای ویرایش...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/organizations/${selectedOrgIdInCrm}?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const org = await response.json();
+                document.getElementById('edit-org-id').value = org.id;
+                document.getElementById('edit-org-name').value = org.name || '';
+                document.getElementById('edit-org-industry').value = org.industry || '';
+                document.getElementById('edit-org-phone').value = org.phone || '';
+                document.getElementById('edit-org-email').value = org.email || '';
+                document.getElementById('edit-org-address').value = org.address || '';
+                document.getElementById('edit-org-description').value = org.description || '';
+                openModal(document.getElementById('editOrgModal'));
+                showStatus('اطلاعات سازمان بارگذاری شد.');
+            } catch (error) {
+                console.error('Error fetching organization for edit:', error);
+                showStatus(`خطا در بارگذاری اطلاعات سازمان: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری اطلاعات سازمان: ${error.message}`);
+            }
+        };
+
+        // Function to submit edited organization data
+        const editOrganization = async (orgData) => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return false; }
+            showStatus('در حال ویرایش سازمان...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/organizations/${orgData.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ...orgData, company_name: currentUser.company_name }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                }
+                const updatedOrg = await response.json();
+                showStatus(`سازمان "${updatedOrg.name}" با موفقیت ویرایش شد.`);
+                showCustomAlert(`سازمان "${updatedOrg.name}" با موفقیت ویرایش شد.`);
+                fetchOrganizations();
+                fetchContacts(); // Refresh contacts as well
+                return true;
+            } catch (error) {
+                console.error('Error editing organization:', error);
+                showStatus(`خطا در ویرایش سازمان: ${error.message}`);
+                showCustomAlert(`خطا در ویرایش سازمان: ${error.message}`);
+                return false;
+            }
+        };
+
+        // Function to delete an organization
+        const deleteOrganization = () => {
+            if (!selectedOrgIdInCrm) {
+                showCustomAlert('لطفاً یک سازمان را برای حذف انتخاب کنید.');
+                return;
+            }
+            showCustomConfirm('آیا مطمئن هستید که می‌خواهید این سازمان و تمام مخاطبین مرتبط با آن را حذف کنید؟', async (confirmed) => {
+                if (confirmed) {
+                    if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
+                    showStatus('در حال حذف سازمان...');
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/organizations/${selectedOrgIdInCrm}?company_name=${encodeURIComponent(currentUser.company_name)}`, {
+                            method: 'DELETE',
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                        }
+                        showStatus('سازمان با موفقیت حذف شد.');
+                        showCustomAlert('سازمان با موفقیت حذف شد.');
+                        selectedOrgIdInCrm = null; // Clear selection
+                        fetchOrganizations();
+                        fetchContacts(); // Refresh contacts as well
+                    } catch (error) {
+                        console.error('Error deleting organization:', error);
+                        showStatus(`خطا در حذف سازمان: ${error.message}`);
+                        showCustomAlert(`خطا در حذف سازمان: ${error.message}`);
+                    }
+                }
+            });
+        };
+
+
+        // --- Contact Management Functions (CRM Tab) ---
+
+        // Function to fetch contacts from backend API
+        const fetchContacts = async (searchTerm = '', organizationId = null) => {
+            if (!currentUser.company_name) {
+                console.warn('currentUser.company_name is not set. Cannot fetch contacts.');
+                return;
+            }
+            showStatus('در حال بارگذاری مخاطبین...');
+            let url = `${API_BASE_URL}/contacts?company_name=${encodeURIComponent(currentUser.company_name)}&search=${encodeURIComponent(searchTerm)}`;
+            if (organizationId) {
+                url += `&organization_id=${organizationId}`;
+            }
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contacts = await response.json();
+                populateContactsTable(contacts);
+                showStatus(`نمایش ${contacts.length} مخاطب.`);
+            }
+            catch (error) {
+                console.error('Error fetching contacts:', error);
+                showStatus(`خطا در بارگذاری مخاطبین: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری مخاطبین: ${error.message}`);
+            }
+        };
+
+        // Function to populate the contacts table (CRM tab)
+        const populateContactsTable = (contacts) => {
+            const contactTableBody = document.getElementById('contact-table-body');
+            if (!contactTableBody) { console.error('contactTableBody not found'); return; }
+            contactTableBody.innerHTML = ''; // Clear existing rows
+            if (contacts.length === 0) {
+                contactTableBody.innerHTML = `<tr><td colspan="6" class="py-3 px-6 text-center text-gray-500">هیچ مخاطبی یافت نشد.</td></tr>`;
+                return;
+            }
+            contacts.forEach(contact => {
+                const row = contactTableBody.insertRow();
+                row.className = 'border-b border-gray-200 hover:bg-gray-50 cursor-pointer';
+                row.dataset.id = contact.id; // Store ID for selection
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-right">${contact.id}</td>
+                    <td class="py-3 px-6 text-right">${contact.first_name}</td>
+                    <td class="py-3 px-6 text-right">${contact.last_name}</td>
+                    <td class="py-3 px-6 text-right">${contact.organization_name || '---'}</td>
+                    <td class="py-3 px-6 text-right">${contact.phone || '---'}</td>
+                    <td class="py-3 px-6 text-right">${contact.email || '---'}</td>
+                `;
+                row.addEventListener('click', () => selectContactRowInCrm(contact.id));
+            });
+        };
+
+        // Select row in CRM contact table
+        const selectContactRowInCrm = (contactId) => {
+            // Remove selection from all rows
+            document.querySelectorAll('#contact-table-body tr').forEach(row => {
+                row.classList.remove('bg-blue-100');
+            });
+            // Add selection to the clicked row
+            const selectedRow = document.querySelector(`#contact-table-body tr[data-id="${contactId}"]`);
+            if (selectedRow) {
+                selectedRow.classList.add('bg-blue-100');
+                selectedContactIdInCrm = contactId;
+                showStatus(`مخاطب با شناسه ${contactId} انتخاب شد.`);
+            } else {
+                selectedContactIdInCrm = null;
+                showStatus('مخاطبی انتخاب نشده است.');
+            }
+        };
+
+        // Function to populate the organization select dropdown in the Add/Edit Contact modal
+        const populateOrgSelectForContacts = (organizations) => {
+            const newContactOrgIdSelect = document.getElementById('new-contact-org-id');
+            const editContactOrgIdSelect = document.getElementById('edit-contact-org-id');
+            
+            if (newContactOrgIdSelect) {
+                newContactOrgIdSelect.innerHTML = '<option value="">--- انتخاب سازمان ---</option>'; // Default option
+            }
+            if (editContactOrgIdSelect) { // Check if edit select exists
+                editContactOrgIdSelect.innerHTML = '<option value="">--- انتخاب سازمان ---</option>';
+            }
+
+            organizations.forEach(org => {
+                if (newContactOrgIdSelect) {
+                    const optionAdd = document.createElement('option');
+                    optionAdd.value = org.id;
+                    optionAdd.textContent = org.name;
+                    newContactOrgIdSelect.appendChild(optionAdd);
+                }
+
+                if (editContactOrgIdSelect) {
+                    const optionEdit = document.createElement('option');
+                    optionEdit.value = org.id;
+                    optionEdit.textContent = org.name;
+                    editContactOrgIdSelect.appendChild(optionEdit);
+                }
+            });
+        };
+
+        // Function to add a new contact
+        const addContact = async (contactData) => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return false; }
+            showStatus('در حال افزودن مخاطب...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/contacts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ...contactData, company_name: currentUser.company_name }), // Include company_name
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                }
+                const newContact = await response.json();
+                showStatus(`مخاطب "${newContact.first_name} ${newContact.last_name}" با موفقیت افزوده شد.`);
+                showCustomAlert(`مخاطب "${newContact.first_name} ${newContact.last_name}" با موفقیت افزوده شد.`);
+                fetchContacts(); // Refresh the list
+                return true; // Indicate success
+            } catch (error) {
+                console.error('Error adding contact:', error);
+                showStatus(`خطا در افزودن مخاطب: ${error.message}`);
+                showCustomAlert(`خطا در افزودن مخاطب: ${error.message}`);
+                return false; // Indicate failure
+            }
+        };
+
+        // Function to open edit contact modal and populate data
+        const openEditContactModal = async () => {
+            if (!selectedContactIdInCrm) {
+                showCustomAlert('لطفاً یک مخاطب را برای ویرایش انتخاب کنید.');
+                return;
+            }
+            showStatus('در حال بارگذاری اطلاعات مخاطب برای ویرایش...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/contacts/${selectedContactIdInCrm}?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contact = await response.json();
+                document.getElementById('edit-contact-id').value = contact.id;
+                document.getElementById('edit-contact-first-name').value = contact.first_name || '';
+                document.getElementById('edit-contact-last-name').value = contact.last_name || '';
+                document.getElementById('edit-contact-title').value = contact.title || '';
+                document.getElementById('edit-contact-phone').value = contact.phone || '';
+                document.getElementById('edit-contact-email').value = contact.email || '';
+                document.getElementById('edit-contact-notes').value = contact.notes || '';
+
+                // Populate and set the organization dropdown
+                await fetchOrganizations(); // Ensure dropdown has latest organizations
+                document.getElementById('edit-contact-org-id').value = contact.organization_id || '';
+                
+                openModal(document.getElementById('editContactModal'));
+                showStatus('اطلاعات مخاطب بارگذاری شد.');
+            } catch (error) {
+                console.error('Error fetching contact for edit:', error);
+                showStatus(`خطا در بارگذاری اطلاعات مخاطب: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری اطلاعات مخاطب: ${error.message}`);
+            }
+        };
+
+        // Function to submit edited contact data
+        const editContact = async (contactData) => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return false; }
+            showStatus('در حال ویرایش مخاطب...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/contacts/${contactData.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ...contactData, company_name: currentUser.company_name }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                }
+                const updatedContact = await response.json();
+                showStatus(`مخاطب "${updatedContact.first_name} ${updatedContact.last_name}" با موفقیت ویرایش شد.`);
+                showCustomAlert(`مخاطب "${updatedContact.first_name} ${updatedContact.last_name}" با موفقیت ویرایش شد.`);
+                fetchContacts();
+                return true;
+            } catch (error) {
+                console.error('Error editing contact:', error);
+                showStatus(`خطا در ویرایش مخاطب: ${error.message}`);
+                showCustomAlert(`خطا در ویرایش مخاطب: ${error.message}`);
+                return false;
+            }
+        };
+
+        // Function to delete a contact
+        const deleteContact = () => {
+            if (!selectedContactIdInCrm) {
+                showCustomAlert('لطفاً یک مخاطب را برای حذف انتخاب کنید.');
+                return;
+            }
+            showCustomConfirm('آیا مطمئن هستید که می‌خواهید این مخاطب را حذف کنید؟', async (confirmed) => {
+                if (confirmed) {
+                    if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
+                    showStatus('در حال حذف مخاطب...');
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/contacts/${selectedContactIdInCrm}?company_name=${encodeURIComponent(currentUser.company_name)}`, {
+                            method: 'DELETE',
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                        }
+                        showStatus('مخاطب با موفقیت حذف شد.');
+                        showCustomAlert('مخاطب با موفقیت حذف شد.');
+                        selectedContactIdInCrm = null; // Clear selection
+                        fetchContacts();
+                    } catch (error) {
+                        console.error('Error deleting contact:', error);
+                        showStatus(`خطا در حذف مخاطب: ${error.message}`);
+                        showCustomAlert(`خطا در حذف مخاطب: ${error.message}`);
+                    }
+                }
+            });
+        };
+
+
+        // --- Archive Management Functions ---
+
+        // Function to fetch letters from backend API
+        const fetchLetters = async (searchTerm = '') => {
+            if (!currentUser.company_name) {
+                console.warn('currentUser.company_name is not set. Cannot fetch letters.');
+                return;
+            }
+            showStatus('در حال بارگذاری نامه‌ها...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/letters?company_name=${encodeURIComponent(currentUser.company_name)}&search=${encodeURIComponent(searchTerm)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const letters = await response.json();
+                populateArchiveTable(letters);
+                showStatus(`نمایش ${letters.length} نامه.`);
+            } catch (error) {
+                console.error('Error fetching letters:', error);
+                showStatus(`خطا در بارگذاری نامه‌ها: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری نامه‌ها: ${error.message}`);
+            }
+        };
+
+        // Function to populate the archive table
+        const populateArchiveTable = (letters) => {
+            const archiveTableBody = document.getElementById('archive-table-body');
+            if (!archiveTableBody) { console.error('archiveTableBody not found'); return; }
+            archiveTableBody.innerHTML = ''; // Clear existing rows
+            if (letters.length === 0) {
+                archiveTableBody.innerHTML = `<tr><td colspan="7" class="py-3 px-6 text-center text-gray-500">هیچ نامه‌ای یافت نشد.</td></tr>`;
+                return;
+            }
+            letters.forEach(letter => {
+                const row = archiveTableBody.insertRow();
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const orgName = letter.organization_name || '---';
+                const contactName = (letter.first_name && letter.last_name) ? `${letter.first_name} ${letter.last_name}` : '---';
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-right whitespace-nowrap">${letter.letter_code_persian}</td>
+                    <td class="py-3 px-6 text-right">${letter.type}</td>
+                    <td class="py-3 px-6 text-right">${letter.date_shamsi_persian}</td>
+                    <td class="py-3 px-6 text-right">${letter.subject}</td>
+                    <td class="py-3 px-6 text-right">${orgName}</td>
+                    <td class="py-3 px-6 text-right">${contactName}</td>
+                    <td class="py-3 px-6 text-center">
+                        <button class="text-blue-600 hover:text-blue-800 font-medium" onclick="downloadLetter(${letter.id})">باز کردن</button>
+                    </td>
+                `;
+            });
+        };
+
+        // Function to download a letter (made global for onclick)
+        window.downloadLetter = (letterId) => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
+            showStatus(`در حال دانلود نامه با شناسه ${letterId}...`);
+            // Open the download URL in a new tab/window
+            // This will trigger the browser's download mechanism
+            const downloadUrl = `${API_BASE_URL}/letters/download/${letterId}?company_name=${encodeURIComponent(currentUser.company_name)}`;
+            window.open(downloadUrl, '_blank');
+            showStatus(`درخواست دانلود نامه با شناسه ${letterId} ارسال شد.`);
+        };
+
+        // --- Letter Generation Functions ---
+
+        // Open Organization Selection Modal
+        const openOrgSelectionDialog = async (searchTerm = '') => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
+            openModal(document.getElementById('selectOrgModal'));
+            showStatus('در حال بارگذاری سازمان‌ها برای انتخاب...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/organizations?company_name=${encodeURIComponent(currentUser.company_name)}&search=${encodeURIComponent(searchTerm)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const organizations = await response.json();
+                populateOrgSelectionTable(organizations);
+                showStatus(`نمایش ${organizations.length} سازمان برای انتخاب.`);
+            } catch (error) {
+                console.error('Error fetching organizations for selection:', error);
+                showStatus(`خطا در بارگذاری سازمان‌ها برای انتخاب: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری سازمان‌ها برای انتخاب: ${error.message}`);
+            }
+        };
+
+        // Populate table in Organization Selection Modal
+        const populateOrgSelectionTable = (organizations) => {
+            const selectOrgTableBody = document.getElementById('select-org-table-body');
+            if (!selectOrgTableBody) { console.error('selectOrgTableBody not found'); return; }
+            selectOrgTableBody.innerHTML = '';
+            if (organizations.length === 0) {
+                selectOrgTableBody.innerHTML = `<tr><td colspan="3" class="py-3 px-6 text-center text-gray-500">هیچ سازمانی یافت نشد.</td></tr>`;
+                return;
+            }
+            organizations.forEach(org => {
+                const row = selectOrgTableBody.insertRow();
+                row.className = 'border-b border-gray-200 hover:bg-gray-50 cursor-pointer';
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-right">${org.id}</td>
+                    <td class="py-3 px-6 text-right">${org.name}</td>
+                    <td class="py-3 px-6 text-right">${org.industry || '---'}</td>
+                `;
+                row.addEventListener('click', () => selectOrgFromDialog(org.id, org.name));
+            });
+        };
+
+        // Select Organization from Dialog
+        const selectOrgFromDialog = (orgId, orgName) => {
+            const selectedOrgIdHidden = document.getElementById('selected-org-id');
+            const entryOrgLetter = document.getElementById('org-select');
+            const selectOrgModal = document.getElementById('selectOrgModal');
+
+            if (selectedOrgIdHidden) selectedOrgIdHidden.value = orgId;
+            if (entryOrgLetter) entryOrgLetter.value = orgName;
+            closeModal(selectOrgModal);
+            showStatus(`سازمان "${orgName}" انتخاب شد.`);
+            // Clear contact selection if organization changes
+            const selectedContactIdHidden = document.getElementById('selected-contact-id');
+            const entryContactLetter = document.getElementById('contact-select');
+            if (selectedContactIdHidden) selectedContactIdHidden.value = '';
+            if (entryContactLetter) entryContactLetter.value = '';
+        };
+
+        // Open Contact Selection Modal
+        const openContactSelectionDialog = async (searchTerm = '') => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
+            openModal(document.getElementById('selectContactModal'));
+            showStatus('در حال بارگذاری مخاطبین برای انتخاب...');
+            const selectedOrgIdHidden = document.getElementById('selected-org-id');
+            let url = `${API_BASE_URL}/contacts?company_name=${encodeURIComponent(currentUser.company_name)}&search=${encodeURIComponent(searchTerm)}`;
+            if (selectedOrgIdHidden && selectedOrgIdHidden.value) {
+                url += `&organization_id=${selectedOrgIdHidden.value}`;
+            }
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const contacts = await response.json();
+                populateContactSelectionTable(contacts);
+                showStatus(`نمایش ${contacts.length} مخاطب برای انتخاب.`);
+            } catch (error) {
+                console.error('Error fetching contacts for selection:', error);
+                showStatus(`خطا در بارگذاری مخاطبین برای انتخاب: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری مخاطبین برای انتخاب: ${error.message}`);
+            }
+        };
+
+        // Populate table in Contact Selection Modal
+        const populateContactSelectionTable = (contacts) => {
+            const selectContactTableBody = document.getElementById('select-contact-table-body');
+            if (!selectContactTableBody) { console.error('selectContactTableBody not found'); return; }
+            selectContactTableBody.innerHTML = '';
+            if (contacts.length === 0) {
+                selectContactTableBody.innerHTML = `<tr><td colspan="4" class="py-3 px-6 text-center text-gray-500">هیچ مخاطبی یافت نشد.</td></tr>`;
+                return;
+            }
+            contacts.forEach(contact => {
+                const row = selectContactTableBody.insertRow();
+                row.className = 'border-b border-gray-200 hover:bg-gray-50 cursor-pointer';
+                const contactFullName = `${contact.first_name} ${contact.last_name}`;
+                const orgName = contact.organization_name || '---';
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-right">${contact.id}</td>
+                    <td class="py-3 px-6 text-right">${contact.first_name}</td>
+                    <td class="py-3 px-6 text-right">${contact.last_name}</td>
+                    <td class="py-3 px-6 text-right">${orgName}</td>
+                `;
+                row.addEventListener('click', () => selectContactFromDialog(contact.id, contactFullName, contact.organization_id, orgName));
+            });
+        };
+
+        // Select Contact from Dialog
+        const selectContactFromDialog = (contactId, contactFullName, orgId, orgName) => {
+            const selectedContactIdHidden = document.getElementById('selected-contact-id');
+            const entryContactLetter = document.getElementById('contact-select');
+            const selectedOrgIdHidden = document.getElementById('selected-org-id');
+            const entryOrgLetter = document.getElementById('org-select');
+            const selectContactModal = document.getElementById('selectContactModal');
+
+            if (selectedContactIdHidden) selectedContactIdHidden.value = contactId;
+            if (entryContactLetter) entryContactLetter.value = contactFullName;
+            
+            // If contact has an organization and it's different from currently selected, update organization fields too
+            if (orgId && selectedOrgIdHidden && selectedOrgIdHidden.value != orgId) {
+                selectedOrgIdHidden.value = orgId;
+                entryOrgLetter.value = orgName;
+            } else if (!orgId && selectedOrgIdHidden) { // If contact has no organization, clear org fields
+                selectedOrgIdHidden.value = '';
+                entryOrgLetter.value = '';
+            }
+            closeModal(selectContactModal);
+            showStatus(`مخاطب "${contactFullName}" انتخاب شد.`);
+        };
+
+        // Function to generate a letter
+        const generateLetter = async () => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
+            showStatus('در حال تولید نامه...');
+            const subjectInput = document.getElementById('subject');
+            const bodyTextarea = document.getElementById('body');
+            const letterTypeSelect = document.getElementById('letter-type');
+            const selectedOrgIdHidden = document.getElementById('selected-org-id');
+            const selectedContactIdHidden = document.getElementById('selected-contact-id');
+
+            const letterData = {
+                company_name: currentUser.company_name, // Include company_name
+                subject: subjectInput ? subjectInput.value.trim() : '',
+                body: bodyTextarea ? bodyTextarea.value.trim() : '',
+                letter_type: letterTypeSelect ? letterTypeSelect.value : 'GEN',
+                organization_id: selectedOrgIdHidden && selectedOrgIdHidden.value ? parseInt(selectedOrgIdHidden.value) : null,
+                contact_id: selectedContactIdHidden && selectedContactIdHidden.value ? parseInt(selectedContactIdHidden.value) : null,
+                user_id: currentUser.id // Pass the actual user ID
+            };
+
+            if (!letterData.subject || !letterData.body) {
+                showCustomAlert('موضوع و متن نامه نمی‌توانند خالی باشند.');
+                showStatus('خطا: موضوع و متن نامه الزامی است.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/letters/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(letterData),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                }
+                const result = await response.json();
+                showStatus(`نامه "${result.letter_code}" با موفقیت تولید و ذخیره شد.`);
+                showCustomAlert(`نامه "${result.letter_code}" با موفقیت تولید و ذخیره شد.`);
+                clearLetterForm(); // Clear the form
+                fetchLetters(); // Refresh archive tab
+            } catch (error) {
+                console.error('Error generating letter:', error);
+                showStatus(`خطا در تولید نامه: ${error.message}`);
+                showCustomAlert(`خطا در تولید نامه: ${error.message}`);
+            }
+        };
+
+        // Function to clear letter generation form
+        const clearLetterForm = () => {
+            const subjectInput = document.getElementById('subject');
+            const bodyTextarea = document.getElementById('body');
+            const letterTypeSelect = document.getElementById('letter-type');
+            const entryOrgLetter = document.getElementById('org-select');
+            const entryContactLetter = document.getElementById('contact-select');
+            const selectedOrgIdHidden = document.getElementById('selected-org-id');
+            const selectedContactIdHidden = document.getElementById('selected-contact-id');
+
+            if (subjectInput) subjectInput.value = '';
+            if (bodyTextarea) bodyTextarea.value = '';
+            if (letterTypeSelect) letterTypeSelect.value = 'GEN'; // Reset to default
+            if (entryOrgLetter) entryOrgLetter.value = '';
+            if (entryContactLetter) entryContactLetter.value = '';
+            if (selectedOrgIdHidden) selectedOrgIdHidden.value = '';
+            if (selectedContactIdHidden) selectedContactIdHidden.value = '';
+        };
+
+        // --- User Management Functions (Settings Tab) ---
+        // Simulated user data for demonstration
+        let simulatedUsers = [
+            { id: 1, email: 'admin@example.com', role: 'admin', status: 'فعال' },
+            { id: 2, email: 'user1@example.com', role: 'user', status: 'فعال' },
+            { id: 3, email: 'user2@example.com', role: 'user', status: 'غیرفعال' },
+        ];
+
+        const fetchUsers = async () => {
+            showStatus('در حال بارگذاری کاربران...');
+            const usersTableBody = document.getElementById('users-table-body');
+            if (usersTableBody) {
+                usersTableBody.innerHTML = `
+                    <tr><td colspan="5" class="py-3 px-6 text-center text-gray-500">
+                        <i class="fas fa-spinner fa-spin ml-2"></i> در حال بارگذاری کاربران...
+                    </td></tr>
+                `;
+            }
+
+            // Simulate fetching data
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    populateUsersTable(simulatedUsers);
+                    showStatus(`نمایش ${simulatedUsers.length} کاربر.`);
+                    resolve();
+                }, 500);
+            });
+        };
+
+        const populateUsersTable = (users) => {
+            const usersTableBody = document.getElementById('users-table-body');
+            if (!usersTableBody) return;
+
+            usersTableBody.innerHTML = '';
+            if (users.length === 0) {
+                usersTableBody.innerHTML = `<tr><td colspan="5" class="py-3 px-6 text-center text-gray-500">هیچ کاربری یافت نشد.</td></tr>`;
+                return;
+            }
+
+            users.forEach(user => {
+                const row = usersTableBody.insertRow();
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const editButtonDisabled = (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') ? 'disabled' : '';
+                const deleteButtonDisabled = (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') ? 'disabled' : '';
+                const disabledClass = 'opacity-50 cursor-not-allowed';
+
+                row.innerHTML = `
+                    <td class="py-3 px-6 text-right">${user.id}</td>
+                    <td class="py-3 px-6 text-right">${user.email}</td>
+                    <td class="py-3 px-6 text-right">${user.role}</td>
+                    <td class="py-3 px-6 text-right">${user.status}</td>
+                    <td class="py-3 px-6 text-center">
+                        <button class="text-blue-600 hover:text-blue-800 font-medium ml-2 ${editButtonDisabled ? disabledClass : ''}" 
+                                onclick="openEditUserModal(${user.id})" ${editButtonDisabled}>ویرایش</button>
+                        <button class="text-red-600 hover:text-red-800 font-medium ${deleteButtonDisabled ? disabledClass : ''}" 
+                                onclick="deleteUser(${user.id})" ${deleteButtonDisabled}>حذف</button>
+                    </td>
+                `;
+            });
+        };
+
+        const addUser = async (userData) => {
+            showStatus('در حال افزودن کاربر...');
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const newId = simulatedUsers.length > 0 ? Math.max(...simulatedUsers.map(u => u.id)) + 1 : 1;
+                    const newUser = { id: newId, status: 'فعال', ...userData };
+                    simulatedUsers.push(newUser);
+                    console.log('Adding user (simulated):', newUser);
+                    showStatus(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
+                    showCustomAlert(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
+                    fetchUsers(); // Refresh the list
+                    resolve(true);
+                }, 1500);
+            });
+        };
+
+        // Function to open edit user modal and populate data
+        window.openEditUserModal = (userId) => {
+            if (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') {
+                showCustomAlert('شما اجازه ویرایش کاربر را ندارید.');
+                return;
+            }
+            showStatus(`در حال بارگذاری اطلاعات کاربر ${userId} برای ویرایش...`);
+            const userToEdit = simulatedUsers.find(u => u.id === userId);
+            if (userToEdit) {
+                document.getElementById('edit-user-id').value = userToEdit.id;
+                document.getElementById('edit-user-email').value = userToEdit.email;
+                document.getElementById('edit-user-role').value = userToEdit.role;
+                openModal(document.getElementById('editUserModal'));
+                showStatus('اطلاعات کاربر بارگذاری شد.');
+            } else {
+                showCustomAlert('کاربر یافت نشد.');
+                showStatus('خطا: کاربر برای ویرایش یافت نشد.');
+            }
+        };
+
+        // Function to submit edited user data
+        const editUser = async (userData) => {
+            showStatus('در حال ویرایش کاربر...');
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const index = simulatedUsers.findIndex(u => u.id === userData.id);
+                    if (index !== -1) {
+                        simulatedUsers[index] = { ...simulatedUsers[index], ...userData };
+                        console.log('Editing user (simulated):', simulatedUsers[index]);
+                        showStatus(`کاربر "${simulatedUsers[index].email}" با موفقیت ویرایش شد.`);
+                        showCustomAlert(`کاربر "${simulatedUsers[index].email}" با موفقیت ویرایش شد.`);
+                        fetchUsers(); // Refresh the list
+                        resolve(true);
+                    } else {
+                        showCustomAlert('خطا: کاربر برای ویرایش یافت نشد.');
+                        showStatus('خطا: کاربر برای ویرایش یافت نشد.');
+                        resolve(false);
+                    }
+                }, 1000);
+            });
+        };
+
+        // Function to delete a user
+        window.deleteUser = (userId) => {
+            if (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') {
+                showCustomAlert('شما اجازه حذف کاربر را ندارید.');
+                return;
+            }
+            showCustomConfirm('آیا مطمئن هستید که می‌خواهید این کاربر را حذف کنید؟', async (confirmed) => {
+                if (confirmed) {
+                    showStatus(`در حال حذف کاربر ${userId}...`);
+                    // Simulate API call
+                    setTimeout(() => {
+                        const initialLength = simulatedUsers.length;
+                        simulatedUsers = simulatedUsers.filter(u => u.id !== userId);
+                        if (simulatedUsers.length < initialLength) {
+                            showStatus('کاربر با موفقیت حذف شد.');
+                            showCustomAlert('کاربر با موفقیت حذف شد.');
+                            fetchUsers(); // Refresh the list
+                        } else {
+                            showCustomAlert('خطا: کاربر برای حذف یافت نشد.');
+                            showStatus('خطا: کاربر برای حذف یافت نشد.');
+                        }
+                    }, 1000);
+                }
+            });
+        };
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM Content Loaded. Initializing application...');
+            showStatus('برنامه در حال بارگذاری است...');
+
+            // Element references (get them inside DOMContentLoaded to ensure they exist)
+            const tabButtons = document.querySelectorAll('.tab-button');
+            
+            // Organization elements (CRM tab)
+            const addOrgBtn = document.getElementById('add-org-btn');
+            const editOrgBtn = document.getElementById('edit-org-btn');
+            const deleteOrgBtn = document.getElementById('delete-org-btn');
+            const addOrgModal = document.getElementById('addOrgModal');
+            const closeAddOrgModal = document.getElementById('closeAddOrgModal');
+            const cancelAddOrgBtn = document.getElementById('cancel-add-org');
+            const addOrgForm = document.getElementById('add-org-form');
+            const orgCrmSearchEntry = document.getElementById('org-crm-search');
+            const orgCrmSearchBtn = document.getElementById('org-crm-search-btn');
+
+            // Contact elements (CRM tab)
+            const addContactBtn = document.getElementById('add-contact-btn');
+            const editContactBtn = document.getElementById('edit-contact-btn');
+            const deleteContactBtn = document.getElementById('delete-contact-btn');
+            const addContactModal = document.getElementById('addContactModal');
+            const closeAddContactModal = document.getElementById('closeAddContactModal');
+            const cancelAddContactBtn = document.getElementById('cancel-add-contact');
+            const addContactForm = document.getElementById('add-contact-form');
+            const newContactOrgIdSelect = document.getElementById('new-contact-org-id');
+            const contactCrmSearchEntry = document.getElementById('contact-crm-search');
+            const contactCrmSearchBtn = document.getElementById('contact-crm-search-btn');
+
+            // Archive elements
+            const archiveSearchEntry = document.getElementById('archive-search');
+            const archiveSearchBtn = document.getElementById('archive-search-btn');
+
+            // Letter Generation elements
+            const selectOrgBtn = document.getElementById('select-org-btn');
+            const selectContactBtn = document.getElementById('select-contact-btn');
+            const selectOrgSearchInput = document.getElementById('select-org-search');
+            const selectOrgSearchBtn = document.getElementById('select-org-search-btn');
+            const selectContactSearchInput = document.getElementById('select-contact-search');
+            const selectContactSearchBtn = document.getElementById('select-contact-search-btn');
+            const generateLetterBtn = document.getElementById('generate-letter-btn');
+
+            // Edit Modals
+            const editOrgModal = document.getElementById('editOrgModal');
+            const closeEditOrgModal = document.getElementById('closeEditOrgModal');
+            const cancelEditOrgBtn = document.getElementById('cancel-edit-org');
+            const editOrgForm = document.getElementById('edit-org-form');
+
+            const editContactModal = document.getElementById('editContactModal');
+            const closeEditContactModal = document.getElementById('closeEditContactModal');
+            const cancelEditContactBtn = document.getElementById('cancel-edit-contact');
+            const editContactForm = document.getElementById('edit-contact-form');
+
+            const closeSelectOrgModal = document.getElementById('closeSelectOrgModal');
+            const cancelSelectOrgBtn = document.getElementById('cancel-select-org');
+
+            const closeSelectContactModal = document.getElementById('closeSelectContactModal');
+            const cancelSelectContactBtn = document.getElementById('cancel-select-contact');
+
+            // User Management elements
+            const manageUsersBtn = document.getElementById('manage-users-btn');
+            const manageUsersSection = document.getElementById('manage-users-section');
+            const addUserBtn = document.getElementById('add-user-btn');
+            const addUserModal = document.getElementById('addUserModal');
+            const closeAddUserModal = document.getElementById('closeAddUserModal');
+            const cancelAddUserBtn = document.getElementById('cancel-add-user');
+            const addUserForm = document.getElementById('add-user-form');
+            const newUserCompanyNameInput = document.getElementById('new-user-company-name');
+
+            const editUserModal = document.getElementById('editUserModal');
+            const closeEditUserModal = document.getElementById('closeEditUserModal');
+            const cancelEditUserBtn = document.getElementById('cancel-edit-user');
+            const editUserForm = document.getElementById('edit-user-form');
+
+
+            // Header Upload elements
+            const headerUploadInput = document.getElementById('header-upload-input');
+            const headerFileNameSpan = document.getElementById('header-file-name');
+            const uploadHeaderBtn = document.getElementById('upload-header-btn');
+
+            // Company Info fields in Settings
+            const companyShortNameInput = document.getElementById('company-short-name');
+            const companyFullNameFooterInput = document.getElementById('company-full-name-footer');
+
+
+            // Retrieve user info from localStorage on page load
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                try {
+                    currentUser = JSON.parse(storedUser);
+                    console.log('Current User Loaded:', currentUser);
+                    if (currentUser.company_name && currentUser.id && currentUser.role && currentUser.email) {
+                        showStatus(`خوش آمدید، ${currentUser.email} در شرکت ${currentUser.company_name}. نقش: ${currentUser.role}`);
+                        applyUserPermissions(); // Apply permissions early
+                        activateTab('letter'); // Activate the default tab ('letter')
+                    } else {
+                        console.log('Incomplete currentUser data in localStorage. Redirecting to login.');
+                        showCustomAlert('اطلاعات کاربری ناقص است. لطفاً دوباره وارد شوید.');
+                        window.location.href = '/'; 
+                    }
+                } catch (e) {
+                    console.error('Error parsing currentUser from localStorage:', e);
+                    showCustomAlert('خطا در بارگذاری اطلاعات کاربری. لطفاً دوباره وارد شوید.');
+                    window.location.href = '/';
+                }
+            } else {
+                console.log('No currentUser found in localStorage. Redirecting to login.');
+                showCustomAlert('شما وارد سیستم نشده‌اید. لطفاً وارد شوید.');
+                window.location.href = '/'; 
+            }
+
+
+            // Attach event listeners for tab buttons
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    activateTab(button.dataset.tab);
+                });
+            });
+
+
+            // CRM Tab Event Listeners
+            if (addOrgBtn) addOrgBtn.addEventListener('click', () => { openModal(addOrgModal); });
+            if (closeAddOrgModal) closeAddOrgModal.addEventListener('click', () => { closeModal(addOrgModal); });
+            if (cancelAddOrgBtn) cancelAddOrgBtn.addEventListener('click', () => { closeModal(addOrgModal); });
+            if (addOrgForm) addOrgForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const orgData = {
+                    name: document.getElementById('new-org-name').value.trim(),
+                    industry: document.getElementById('new-org-industry').value.trim(),
+                    phone: document.getElementById('new-org-phone').value.trim(),
+                    email: document.getElementById('new-org-email').value.trim(),
+                    address: document.getElementById('new-org-address').value.trim(),
+                    description: document.getElementById('new-org-description').value.trim(),
+                };
+                if (orgData.name) {
+                    const success = await addOrganization(orgData);
+                    if (success) { closeModal(addOrgModal); }
+                } else { showCustomAlert('نام سازمان الزامی است.'); showStatus('خطا: نام سازمان الزامی است.'); }
+            });
+            if (editOrgBtn) editOrgBtn.addEventListener('click', openEditOrganizationModal);
+            if (closeEditOrgModal) closeEditOrgModal.addEventListener('click', () => { closeModal(editOrgModal); });
+            if (cancelEditOrgBtn) cancelEditOrgBtn.addEventListener('click', () => { closeModal(editOrgModal); });
+            if (editOrgForm) editOrgForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const orgData = {
+                    id: parseInt(document.getElementById('edit-org-id').value),
+                    name: document.getElementById('edit-org-name').value.trim(),
+                    industry: document.getElementById('edit-org-industry').value.trim(),
+                    phone: document.getElementById('edit-org-phone').value.trim(),
+                    email: document.getElementById('edit-org-email').value.trim(),
+                    address: document.getElementById('edit-org-address').value.trim(),
+                    description: document.getElementById('edit-org-description').value.trim(),
+                };
+                if (orgData.name) {
+                    const success = await editOrganization(orgData);
+                    if (success) { closeModal(editOrgModal); }
+                } else { showCustomAlert('نام سازمان الزامی است.'); showStatus('خطا: نام سازمان الزامی است.'); }
+            });
+            if (deleteOrgBtn) deleteOrgBtn.addEventListener('click', deleteOrganization);
+            if (orgCrmSearchBtn) orgCrmSearchBtn.addEventListener('click', () => { fetchOrganizations(orgCrmSearchEntry.value.trim()); });
+            if (orgCrmSearchEntry) orgCrmSearchEntry.addEventListener('keypress', (e) => { if (e.key === 'Enter') { fetchOrganizations(orgCrmSearchEntry.value.trim()); } });
+
+            if (addContactBtn) addContactBtn.addEventListener('click', () => { openModal(addContactModal); fetchOrganizations(); }); // Fetch orgs for dropdown
+            if (closeAddContactModal) closeAddContactModal.addEventListener('click', () => { closeModal(addContactModal); });
+            if (cancelAddContactBtn) cancelAddContactBtn.addEventListener('click', () => { closeModal(addContactModal); });
+            if (addContactForm) addContactForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const contactData = {
+                    first_name: document.getElementById('new-contact-first-name').value.trim(),
+                    last_name: document.getElementById('new-contact-last-name').value.trim(),
+                    title: document.getElementById('new-contact-title').value.trim(),
+                    organization_id: newContactOrgIdSelect.value ? parseInt(newContactOrgIdSelect.value) : null,
+                    phone: document.getElementById('new-contact-phone').value.trim(),
+                    email: document.getElementById('new-contact-email').value.trim(),
+                    notes: document.getElementById('new-contact-notes').value.trim(),
+                };
+                if (contactData.first_name && contactData.last_name) {
+                    const success = await addContact(contactData);
+                    if (success) { closeModal(addContactModal); }
+                } else { showCustomAlert('نام و نام خانوادگی مخاطب الزامی است.'); showStatus('خطا: نام و نام خانوادگی مخاطب الزامی است.'); }
+            });
+            if (editContactBtn) editContactBtn.addEventListener('click', openEditContactModal);
+            if (closeEditContactModal) closeEditContactModal.addEventListener('click', () => { closeModal(editContactModal); });
+            if (cancelEditContactBtn) cancelEditContactBtn.addEventListener('click', () => { closeModal(editContactModal); });
+            if (editContactForm) editContactForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const contactData = {
+                    id: parseInt(document.getElementById('edit-contact-id').value),
+                    first_name: document.getElementById('edit-contact-first-name').value.trim(),
+                    last_name: document.getElementById('edit-contact-last-name').value.trim(),
+                    title: document.getElementById('edit-contact-title').value.trim(),
+                    organization_id: document.getElementById('edit-contact-org-id').value ? parseInt(document.getElementById('edit-contact-org-id').value) : null,
+                    phone: document.getElementById('edit-contact-phone').value.trim(),
+                    email: document.getElementById('edit-contact-email').value.trim(),
+                    notes: document.getElementById('edit-contact-notes').value.trim(),
+                };
+                if (contactData.first_name && contactData.last_name) {
+                    const success = await editContact(contactData);
+                    if (success) { closeModal(editContactModal); }
+                } else { showCustomAlert('نام و نام خانوادگی مخاطب الزامی است.'); showStatus('خطا: نام و نام خانوادگی مخاطب الزامی است.'); }
+            });
+            if (deleteContactBtn) deleteContactBtn.addEventListener('click', deleteContact);
+            if (contactCrmSearchBtn) contactCrmSearchBtn.addEventListener('click', () => { fetchContacts(contactCrmSearchEntry.value.trim()); });
+            if (contactCrmSearchEntry) contactCrmSearchEntry.addEventListener('keypress', (e) => { if (e.key === 'Enter') { fetchContacts(contactCrmSearchEntry.value.trim()); } });
+
+            // Archive Tab Event Listeners
+            if (archiveSearchBtn) archiveSearchBtn.addEventListener('click', () => { fetchLetters(archiveSearchEntry.value.trim()); });
+            if (archiveSearchEntry) archiveSearchEntry.addEventListener('keypress', (e) => { if (e.key === 'Enter') { fetchLetters(archiveSearchEntry.value.trim()); } });
+
+            // Letter Generation Tab Event Listeners
+            if (selectOrgBtn) selectOrgBtn.addEventListener('click', () => { openOrgSelectionDialog(); });
+            if (closeSelectOrgModal) closeSelectOrgModal.addEventListener('click', () => { closeModal(document.getElementById('selectOrgModal')); });
+            if (cancelSelectOrgBtn) cancelSelectOrgBtn.addEventListener('click', () => { closeModal(document.getElementById('selectOrgModal')); });
+            if (selectOrgSearchBtn) selectOrgSearchBtn.addEventListener('click', () => { openOrgSelectionDialog(selectOrgSearchInput.value.trim()); });
+            if (selectOrgSearchInput) selectOrgSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { openOrgSelectionDialog(selectOrgSearchInput.value.trim()); } });
+
+            if (selectContactBtn) selectContactBtn.addEventListener('click', () => { openContactSelectionDialog(); });
+            if (closeSelectContactModal) closeSelectContactModal.addEventListener('click', () => { closeModal(document.getElementById('selectContactModal')); });
+            if (cancelSelectContactBtn) cancelSelectContactBtn.addEventListener('click', () => { closeModal(document.getElementById('selectContactModal')); });
+            if (selectContactSearchBtn) selectContactSearchBtn.addEventListener('click', () => { openContactSelectionDialog(selectContactSearchInput.value.trim()); });
+            if (selectContactSearchInput) selectContactSearchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { openContactSelectionDialog(selectContactSearchInput.value.trim()); } });
+
+            if (generateLetterBtn) generateLetterBtn.addEventListener('click', generateLetter);
+
+
+            // --- Settings Tab Specific Event Listeners ---
+            // Header Upload functionality
+            if (uploadHeaderBtn) uploadHeaderBtn.addEventListener('click', () => {
+                if (headerUploadInput.files.length > 0) {
+                    const fileName = headerUploadInput.files[0].name;
+                    showStatus(`فایل "${fileName}" با موفقیت آپلود شد (شبیه‌سازی).`);
+                    showCustomAlert(`فایل "${fileName}" با موفقیت آپلود شد.`);
+                } else {
+                    showStatus('خطا: لطفاً ابتدا یک فایل برای سربرگ انتخاب کنید.');
+                    showCustomAlert('خطا: لطفاً ابتدا یک فایل برای سربرگ انتخاب کنید.');
+                }
+            });
+            if (headerUploadInput) headerUploadInput.addEventListener('change', () => {
+                if (headerUploadInput.files.length > 0) {
+                    headerFileNameSpan.textContent = headerUploadInput.files[0].name;
+                } else {
+                    headerFileNameSpan.textContent = 'فایلی انتخاب نشده است.';
+                }
+            });
+
+            // Toggle Manage Users Section visibility
+            if (manageUsersBtn) manageUsersBtn.addEventListener('click', () => {
+                if (manageUsersSection) {
+                    manageUsersSection.classList.toggle('hidden');
+                    if (!manageUsersSection.classList.contains('hidden')) {
+                        showStatus('بخش مدیریت کاربران فعال شد.');
+                        fetchUsers(); // Fetch users when the section is shown
+                    } else {
+                        showStatus('بخش مدیریت کاربران پنهان شد.');
+                    }
+                }
+            });
+
+            // Add User button in Manage Users section
+            if (addUserBtn) addUserBtn.addEventListener('click', () => {
+                if (newUserCompanyNameInput) {
+                    newUserCompanyNameInput.value = currentUser.company_name || ''; // Pre-fill company name
+                }
+                openModal(addUserModal);
+            });
+            if (closeAddUserModal) closeAddUserModal.addEventListener('click', () => { closeModal(addUserModal); });
+            if (cancelAddUserBtn) cancelAddUserBtn.addEventListener('click', () => { closeModal(addUserModal); });
+            if (addUserForm) addUserForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const email = document.getElementById('new-user-email').value.trim();
+                const password = document.getElementById('new-user-password').value;
+                const confirmPassword = document.getElementById('new-user-confirm-password').value;
+                const role = document.getElementById('new-user-role').value;
+                const companyName = document.getElementById('new-user-company-name').value.trim();
+
+                if (!email || !password || !confirmPassword || !companyName) {
+                    showCustomAlert('لطفاً تمام فیلدهای الزامی را پر کنید.');
+                    showStatus('خطا: تمام فیلدها الزامی هستند.');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showCustomAlert('رمز عبور و تایید رمز عبور مطابقت ندارند.');
+                    showStatus('خطا: رمز عبور و تایید آن یکسان نیستند.');
+                    return;
+                }
+
+                const userData = { email, password, role, company_name: companyName };
+                const success = await addUser(userData); // Call the simulated addUser function
+                if (success) {
+                    closeModal(addUserModal);
+                }
+            });
+
+            // Edit User Modal Event Listeners
+            if (closeEditUserModal) closeEditUserModal.addEventListener('click', () => { closeModal(editUserModal); });
+            if (cancelEditUserBtn) cancelEditUserBtn.addEventListener('click', () => { closeModal(editUserModal); });
+            if (editUserForm) editUserForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const userId = parseInt(document.getElementById('edit-user-id').value);
+                const role = document.getElementById('edit-user-role').value;
+                const userData = { id: userId, role: role };
+                const success = await editUser(userData);
+                if (success) {
+                    closeModal(editUserModal);
+                }
+            });
+
+
+            // Save settings button (for company info and header upload)
+            if (document.getElementById('save-settings-btn')) document.getElementById('save-settings-btn').addEventListener('click', () => {
+                const updatedSettings = {
+                    company_short_name: companyShortNameInput ? companyShortNameInput.value.trim() : '',
+                    company_full_name_footer: companyFullNameFooterInput ? companyFullNameFooterInput.value.trim() : '',
+                    // Potentially add logic here to save header file path if needed, but for now, it's just upload action
+                };
+                // In a real app, you'd send this to your backend
+                console.log('Saving settings (simulated):', updatedSettings);
+                showStatus('تنظیمات با موفقیت ذخیره شد (شبیه‌سازی).');
+                showCustomAlert('تنظیمات با موفقیت ذخیره شد (شبیه‌سازی).');
+                // Update currentUser in localStorage with new settings
+                currentUser = { ...currentUser, ...updatedSettings };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            });
+
+
+            if (document.getElementById('change-password-btn')) document.getElementById('change-password-btn').addEventListener('click', () => {
+                showStatus('تغییر رمز عبور (هنوز پیاده‌سازی نشده)');
+                showCustomAlert('تغییر رمز عبور هنوز پیاده‌سازی نشده است.');
+            });
+            
+            if (document.getElementById('logout-btn')) document.getElementById('logout-btn').addEventListener('click', () => {
+                showStatus('شما با موفقیت از حساب کاربری خود خارج شدید.');
+                showCustomAlert('شما با موفقیت از حساب کاربری خود خارج شدید.');
+                localStorage.removeItem('currentUser'); // Clear user info
+                window.location.href = '/'; // Redirect to login page
+            });
+        });
+    </script>
+</body>
+</html>
