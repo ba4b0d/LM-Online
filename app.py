@@ -82,7 +82,7 @@ def init_db(company_name):
         CREATE TABLE IF NOT EXISTS letters (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             company_abbr TEXT NOT NULL,
-            seq_num INTEGER NOT NULL,
+            seq_num INTEGER NOT NULL, -- This will now be the daily sequence number
             letter_code_persian TEXT NOT NULL UNIQUE,
             type TEXT NOT NULL,
             date_shamsi_persian TEXT NOT NULL,
@@ -825,17 +825,24 @@ def generate_letter():
         if not letter_template_path or not os.path.exists(letter_template_path):
             return jsonify({"message": "No letter template configured or template file not found. Please upload a .docx template in settings."}), 400
 
-        # 2. Get next sequence number for letter code
-        cursor.execute("SELECT MAX(seq_num) FROM letters WHERE company_abbr = ?", (company_short_name,))
+        # 2. Generate Persian date and Gregorian date
+        current_gregorian_date = datetime.now()
+        # Format Persian date as YYMMDD for the letter code
+        date_shamsi_persian_full = jdatetime.date.fromgregorian(date=current_gregorian_date).strftime("%Y/%m/%d")
+        date_shamsi_yymmdd = jdatetime.date.fromgregorian(date=current_gregorian_date).strftime("%y%m%d")
+
+
+        # 3. Get next sequence number for letter code, resetting daily
+        # Query for the maximum seq_num for the current company and current Persian date
+        cursor.execute(
+            "SELECT MAX(seq_num) FROM letters WHERE company_abbr = ? AND date_shamsi_persian = ?",
+            (company_short_name, date_shamsi_persian_full) # Use the full date for matching
+        )
         max_seq_num = cursor.fetchone()[0]
         next_seq_num = (max_seq_num if max_seq_num is not None else 0) + 1
 
-        # 3. Generate Persian date and Gregorian date
-        current_gregorian_date = datetime.now()
-        date_shamsi_persian = jdatetime.date.fromgregorian(date=current_gregorian_date).strftime("%Y/%m/%d")
-
-        # 4. Construct letter code
-        letter_code_persian = f"{company_short_name}-{next_seq_num:04d}-{letter_type}-{date_shamsi_persian.replace('/', '')}"
+        # 4. Construct letter code with new format: MyCompany1-GEN-yymmdd-001
+        letter_code_persian = f"{company_short_name}-{letter_type}-{date_shamsi_yymmdd}-{next_seq_num:03d}"
 
         # 5. Fetch organization and contact details if provided
         organization_name = ""
@@ -857,7 +864,7 @@ def generate_letter():
 
         # Iterate through paragraphs and replace text
         for paragraph in doc.paragraphs:
-            replace_placeholder_in_paragraph(paragraph, '[[DATE]]', date_shamsi_persian)
+            replace_placeholder_in_paragraph(paragraph, '[[DATE]]', date_shamsi_persian_full)
             replace_placeholder_in_paragraph(paragraph, '[[CODE]]', letter_code_persian)
             replace_placeholder_in_paragraph(paragraph, '[[ORGANIZATION_NAME]]', organization_name)
             replace_placeholder_in_paragraph(paragraph, '[[CONTACT_NAME]]', contact_name)
@@ -870,7 +877,7 @@ def generate_letter():
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
-                        replace_placeholder_in_paragraph(paragraph, '[[DATE]]', date_shamsi_persian)
+                        replace_placeholder_in_paragraph(paragraph, '[[DATE]]', date_shamsi_persian_full)
                         replace_placeholder_in_paragraph(paragraph, '[[CODE]]', letter_code_persian)
                         replace_placeholder_in_paragraph(paragraph, '[[ORGANIZATION_NAME]]', organization_name)
                         replace_placeholder_in_paragraph(paragraph, '[[CONTACT_NAME]]', contact_name)
@@ -887,13 +894,18 @@ def generate_letter():
         local_file_path = os.path.join(generated_letters_company_dir, output_filename)
         doc.save(local_file_path)
 
+        # Extract text content from the generated document for display in frontend
+        full_letter_text = ""
+        for paragraph in doc.paragraphs:
+            full_letter_text += paragraph.text + "\n"
+        
         # 8. Save letter metadata to database
         cursor.execute("""
             INSERT INTO letters (company_abbr, seq_num, letter_code_persian, type, date_shamsi_persian, subject, body, organization_id, contact_id, local_file_path, current_gregorian_date, user_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             company_short_name, next_seq_num, letter_code_persian, letter_type,
-            date_shamsi_persian, subject, body, organization_id, contact_id,
+            date_shamsi_persian_full, subject, body, organization_id, contact_id,
             local_file_path, current_gregorian_date.strftime("%Y-%m-%d %H:%M:%S"), user_id
         ))
         conn.commit()
@@ -902,7 +914,8 @@ def generate_letter():
             "message": "Letter generated and saved successfully",
             "letter_code": letter_code_persian,
             "letter_id": cursor.lastrowid,
-            "download_url": f"/api/letters/download/{cursor.lastrowid}?company_name={company_name}"
+            "download_url": f"/api/letters/download/{cursor.lastrowid}?company_name={company_name}",
+            "letter_content": full_letter_text # Add the full letter text
         }), 201
 
     except FileNotFoundError:
