@@ -963,6 +963,68 @@ def get_letters():
         print(f"Error fetching letters: {e}")
         return jsonify({"message": f"Error fetching letters: {str(e)}"}), 500
 
+@app.route('/api/letters/<int:letter_id>', methods=['GET'])
+def get_letter(letter_id):
+    """
+    Retrieves a single letter by ID and its content from the DOCX file.
+    """
+    company_name = request.args.get('company_name')
+    if not company_name:
+        return jsonify({"message": "Company name is required"}), 400
+
+    db_path = get_db_path(company_name)
+    if not os.path.exists(db_path):
+        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+
+    conn = None
+    try:
+        conn = get_db_connection(company_name)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT l.id, l.letter_code_persian, l.type, l.date_shamsi_persian, l.subject, l.body,
+                   l.local_file_path,
+                   o.name AS organization_name, c.first_name, c.last_name
+            FROM letters l
+            LEFT JOIN organizations o ON l.organization_id = o.id
+            LEFT JOIN contacts c ON l.contact_id = c.id
+            WHERE l.id = ?
+        """, (letter_id,))
+        letter = cursor.fetchone()
+        conn.close()
+
+        if not letter:
+            return jsonify({"message": "Letter not found"}), 404
+        
+        # Read content from the DOCX file
+        letter_content_text = ""
+        if letter['local_file_path'] and os.path.exists(letter['local_file_path']):
+            doc = Document(letter['local_file_path'])
+            for paragraph in doc.paragraphs:
+                letter_content_text += paragraph.text + "\n"
+        else:
+            letter_content_text = "محتوای نامه در فایل محلی یافت نشد."
+
+
+        return jsonify({
+            "id": letter['id'],
+            "letter_code_persian": letter['letter_code_persian'],
+            "type": letter['type'],
+            "date_shamsi_persian": letter['date_shamsi_persian'],
+            "subject": letter['subject'],
+            "body": letter['body'], # This is the original body, not the full generated text
+            "organization_name": letter['organization_name'],
+            "contact_name": f"{letter['first_name']} {letter['last_name']}" if letter['first_name'] else None,
+            "letter_content": letter_content_text # The full content from the DOCX file
+        }), 200
+
+    except Exception as e:
+        print(f"Error fetching letter details: {e}")
+        return jsonify({"message": f"Error fetching letter details: {str(e)}"}), 500
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()
+
+
 @app.route('/api/letters/download/<int:letter_id>', methods=['GET'])
 def download_letter(letter_id):
     """Serves the generated DOCX letter file for download."""
