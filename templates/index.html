@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سیستم مدیریت نامه‌نگاری و CRM</title>
+    <title>RayaCRM</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font (for a modern look) -->
@@ -145,7 +145,7 @@
 </head>
 <body class="flex flex-col min-h-screen">
     <div class="flex-grow container mx-auto p-6 bg-white shadow-lg rounded-lg my-8">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">سیستم مدیریت نامه‌نگاری و CRM</h1>
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">RayaCRM</h1>
 
         <!-- Tabs Navigation -->
         <div class="flex border-b border-gray-200 mb-6">
@@ -187,6 +187,9 @@
                     </div>
                 </div>
             </div>
+            <button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-md focus:outline-none focus:shadow-outline transition duration-200 mt-6">
+                خروج از حساب
+            </button>
         </div>
 
         <!-- Tab Content: تولید نامه -->
@@ -396,13 +399,12 @@
                                 <th class="py-3 px-6 text-right border-b">شناسه</th>
                                 <th class="py-3 px-6 text-right border-b">ایمیل</th>
                                 <th class="py-3 px-6 text-right border-b">نقش</th>
-                                <th class="py-3 px-6 text-right border-b">وضعیت</th>
                                 <th class="py-3 px-6 text-center border-b">عملیات</th>
                             </tr>
                         </thead>
                         <tbody id="users-table-body" class="text-gray-700 text-sm font-light">
                             <!-- Users will be dynamically loaded here -->
-                            <tr><td colspan="5" class="py-3 px-6 text-center text-gray-500">کاربری یافت نشد.</td></tr>
+                            <tr><td colspan="4" class="py-3 px-6 text-center text-gray-500">کاربری یافت نشد.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -582,6 +584,7 @@
         </div>
     </div>
 
+
     <!-- Select Organization Modal -->
     <div id="selectOrgModal" class="modal">
         <div class="modal-content max-w-2xl">
@@ -629,7 +632,7 @@
                             <th class="py-3 px-6 text-right border-b">شناسه</th>
                             <th class="py-3 px-6 text-right border-b">نام</th>
                             <th class="py-3 px-6 text-right border-b">نام خانوادگی</th>
-                            <th class="py-3 px-6 و text-right border-b">سازمان</th>
+                            <th class="py-3 px-6 text-right border-b">سازمان</th>
                         </tr>
                     </thead>
                     <tbody id="select-contact-table-body" class="text-gray-700 text-sm font-light">
@@ -1533,7 +1536,7 @@
 ${letter.date_shamsi_persian}
 ${letter.letter_code_persian}
 
-گیرنده: ${letter.organization_name || '---'} - ${letter.first_name || ''} ${letter.last_name || ''}
+گیرنده: ${letter.organization_name || '---'} - ${letter.contact_name || '---'}
 موضوع: ${letter.subject}
 
 با سلام و احترام،
@@ -1661,7 +1664,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
             contacts.forEach(contact => {
                 const row = selectContactTableBody.insertRow();
                 row.className = 'border-b border-gray-200 hover:bg-gray-50 cursor-pointer';
-                const contactFullName = `${contact.first_name} ${contact.last_name}`;
+                const contactFullName = `${contact.first_name || ''} ${contact.last_name || ''}`.trim();
                 const orgName = contact.organization_name || '---';
                 row.innerHTML = `
                     <td class="py-3 px-6 text-right">${contact.id}</td>
@@ -1714,7 +1717,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
             const bodyTextarea = document.getElementById('body');
             const letterTypeSelect = document.getElementById('letter-type');
             const selectedOrgIdHidden = document.getElementById('selected-org-id');
-            const selectedContactIdHidden = document.getElementById('selected.contact-id'); // Typo: selected.contact-id -> selected-contact-id
+            const selectedContactIdHidden = document.getElementById('selected-contact-id'); 
 
             const letterData = {
                 company_name: currentUser.company_name,
@@ -1756,12 +1759,15 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
                 const currentTemplateNameInModal = document.getElementById('current-template-name-in-modal');
 
                 if (letterBodyDisplay) {
-                    // Construct a text-based preview from the input data
+                    // Get current values from the input fields for the preview
+                    const currentOrgName = document.getElementById('org-select').value || '---';
+                    const currentContactName = document.getElementById('contact-select').value || '---';
+
                     const previewText = `
 ${new Date().toLocaleDateString('fa-IR')}
 ${result.letter_code}
 
-گیرنده: ${document.getElementById('org-select').value || '---'} - ${document.getElementById('contact-select').value || '---'}
+گیرنده: ${currentOrgName} - ${currentContactName}
 موضوع: ${letterData.subject}
 
 با سلام و احترام،
@@ -1820,45 +1826,35 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
         };
 
         // --- User Management Functions (Settings Tab) ---
-        // Simulated user data for demonstration
-        let simulatedUsers = [
-            { id: 1, email: 'admin@example.com', role: 'admin', status: 'فعال' },
-            { id: 2, email: 'user1@example.com', role: 'user', status: 'فعال' },
-            { id: 3, email: 'user2@example.com', role: 'user', status: 'غیرفعال' },
-        ];
-
+        
         const fetchUsers = async () => {
+            if (!currentUser.company_name) {
+                console.warn('currentUser.company_name is not set. Cannot fetch users.');
+                return;
+            }
             showStatus('در حال بارگذاری کاربران...');
             const usersTableBody = document.getElementById('users-table-body');
             if (usersTableBody) {
                 usersTableBody.innerHTML = `
-                    <tr><td colspan="5" class="py-3 px-6 text-center text-gray-500">
+                    <tr><td colspan="4" class="py-3 px-6 text-center text-gray-500">
                         <i class="fas fa-spinner fa-spin ml-2"></i> در حال بارگذاری کاربران...
                     </td></tr>
                 `;
             }
 
-            // Simulate fetching data
-            // In a real app, you'd fetch from your backend:
-            // try {
-            //     const response = await fetch(`${API_BASE_URL}/users?company_name=${encodeURIComponent(currentUser.company_name)}`);
-            //     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            //     const users = await response.json();
-            //     populateUsersTable(users);
-            //     showStatus(`نمایش ${users.length} کاربر.`);
-            // } catch (error) {
-            //     console.error('Error fetching users:', error);
-            //     showStatus(`خطا در بارگذاری کاربران: ${error.message}`);
-            //     showCustomAlert(`خطا در بارگذاری کاربران: ${error.message}`);
-            // }
-
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    populateUsersTable(simulatedUsers);
-                    showStatus(`نمایش ${simulatedUsers.length} کاربر.`);
-                    resolve();
-                }, 500);
-            });
+            try {
+                const response = await fetch(`${API_BASE_URL}/users?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const users = await response.json();
+                populateUsersTable(users);
+                showStatus(`نمایش ${users.length} کاربر.`);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                showStatus(`خطا در بارگذاری کاربران: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری کاربران: ${error.message}`);
+            }
         };
 
         const populateUsersTable = (users) => {
@@ -1867,7 +1863,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
 
             usersTableBody.innerHTML = '';
             if (users.length === 0) {
-                usersTableBody.innerHTML = `<tr><td colspan="5" class="py-3 px-6 text-center text-gray-500">هیچ کاربری یافت نشد.</td></tr>`;
+                usersTableBody.innerHTML = `<tr><td colspan="4" class="py-3 px-6 text-center text-gray-500">هیچ کاربری یافت نشد.</td></tr>`;
                 return;
             }
 
@@ -1882,7 +1878,6 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
                     <td class="py-3 px-6 text-right">${user.id}</td>
                     <td class="py-3 px-6 text-right">${user.email}</td>
                     <td class="py-3 px-6 text-right">${user.role}</td>
-                    <td class="py-3 px-6 text-right">${user.status || '---'}</td>
                     <td class="py-3 px-6 text-center">
                         <button class="text-blue-600 hover:text-blue-800 font-medium ml-2 ${editButtonDisabled ? disabledClass : ''}" 
                                 onclick="openEditUserModal(${user.id})" ${editButtonDisabled}>ویرایش</button>
@@ -1894,154 +1889,115 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
         };
 
         const addUser = async (userData) => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return false; }
             showStatus('در حال افزودن کاربر...');
-            // In a real app, you'd send to your backend:
-            // try {
-            //     const response = await fetch(`${API_BASE_URL}/users`, {
-            //         method: 'POST',
-            //         headers: { 'Content-Type': 'application/json' },
-            //         body: JSON.stringify({ ...userData, company_name: currentUser.company_name }),
-            //     });
-            //     if (!response.ok) {
-            //         const errorData = await response.json();
-            //         throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
-            //     }
-            //     const newUser = await response.json();
-            //     showStatus(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
-            //     showCustomAlert(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
-            //     fetchUsers();
-            //     return true;
-            // } catch (error) {
-            //     console.error('Error adding user:', error);
-            //     showStatus(`خطا در افزودن کاربر: ${error.message}`);
-            //     showCustomAlert(`خطا در افزودن کاربر: ${error.message}`);
-            //     return false;
-            // }
-
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const newId = simulatedUsers.length > 0 ? Math.max(...simulatedUsers.map(u => u.id)) + 1 : 1;
-                    const newUser = { id: newId, status: 'فعال', ...userData };
-                    simulatedUsers.push(newUser);
-                    console.log('Adding user (simulated):', newUser);
-                    showStatus(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
-                    showCustomAlert(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
-                    fetchUsers(); // Refresh the list
-                    resolve(true);
-                }, 1500);
-            });
+            try {
+                const response = await fetch(`${API_BASE_URL}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...userData, company_name: currentUser.company_name }),
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                }
+                const newUser = await response.json();
+                showStatus(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
+                showCustomAlert(`کاربر "${newUser.email}" با موفقیت افزوده شد.`);
+                fetchUsers(); // Refresh the list
+                return true;
+            } catch (error) {
+                console.error('Error adding user:', error);
+                showStatus(`خطا در افزودن کاربر: ${error.message}`);
+                showCustomAlert(`خطا در افزودن کاربر: ${error.message}`);
+                return false;
+            }
         };
 
         // Function to open edit user modal and populate data
-        window.openEditUserModal = (userId) => {
+        window.openEditUserModal = async (userId) => {
             if (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') {
                 showCustomAlert('شما اجازه ویرایش کاربر را ندارید.');
                 return;
             }
             showStatus(`در حال بارگذاری اطلاعات کاربر ${userId} برای ویرایش...`);
-            const userToEdit = simulatedUsers.find(u => u.id === userId);
-            if (userToEdit) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const userToEdit = await response.json();
                 document.getElementById('edit-user-id').value = userToEdit.id;
                 document.getElementById('edit-user-email').value = userToEdit.email;
                 document.getElementById('edit-user-role').value = userToEdit.role;
                 openModal(document.getElementById('editUserModal'));
                 showStatus('اطلاعات کاربر بارگذاری شد.');
-            } else {
-                showCustomAlert('کاربر یافت نشد.');
-                showStatus('خطا: کاربر برای ویرایش یافت نشد.');
+            } catch (error) {
+                console.error('Error fetching user for edit:', error);
+                showStatus(`خطا در بارگذاری اطلاعات کاربر: ${error.message}`);
+                showCustomAlert(`خطا در بارگذاری اطلاعات کاربر: ${error.message}`);
             }
         };
 
         // Function to submit edited user data
         const editUser = async (userData) => {
+            if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return false; }
             showStatus('در حال ویرایش کاربر...');
-            // In a real app, you'd send to your backend:
-            // try {
-            //     const response = await fetch(`${API_BASE_URL}/users/${userData.id}`, {
-            //         method: 'PUT',
-            //         headers: { 'Content-Type': 'application/json' },
-            //         body: JSON.stringify({ ...userData, company_name: currentUser.company_name }),
-            //     });
-            //     if (!response.ok) {
-            //         const errorData = await response.json();
-            //         throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
-            //     }
-            //     const updatedUser = await response.json(); // Backend might return updated user
-            //     showStatus(`کاربر "${updatedUser.email}" با موفقیت ویرایش شد.`);
-            //     showCustomAlert(`کاربر "${updatedUser.email}" با موفقیت ویرایش شد.`);
-            //     fetchUsers();
-            //     return true;
-            // } catch (error) {
-            //     console.error('Error editing user:', error);
-            //     showStatus(`خطا در ویرایش کاربر: ${error.message}`);
-            //     showCustomAlert(`خطا در ویرایش کاربر: ${error.message}`);
-            //     return false;
-            // }
-
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const index = simulatedUsers.findIndex(u => u.id === userData.id);
-                    if (index !== -1) {
-                        simulatedUsers[index] = { ...simulatedUsers[index], ...userData };
-                        console.log('Editing user (simulated):', simulatedUsers[index]);
-                        showStatus(`کاربر "${simulatedUsers[index].email}" با موفقیت ویرایش شد.`);
-                        showCustomAlert(`کاربر "${simulatedUsers[index].email}" با موفقیت ویرایش شد.`);
-                        fetchUsers(); // Refresh the list
-                        resolve(true);
-                    } else {
-                        showCustomAlert('خطا: کاربر برای ویرایش یافت نشد.');
-                        showStatus('خطا: کاربر برای ویرایش یافت نشد.');
-                        resolve(false);
-                    }
-                }, 1000);
-            });
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userData.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...userData, company_name: currentUser.company_name }),
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
+                }
+                const updatedUser = await response.json(); // Backend might return updated user
+                showStatus(`کاربر "${updatedUser.email}" با موفقیت ویرایش شد.`);
+                showCustomAlert(`کاربر "${updatedUser.email}" با موفقیت ویرایش شد.`);
+                fetchUsers();
+                return true;
+            } catch (error) {
+                console.error('Error editing user:', error);
+                showStatus(`خطا در ویرایش کاربر: ${error.message}`);
+                showCustomAlert(`خطا در ویرایش کاربر: ${error.message}`);
+                return false;
+            }
         };
 
         // Function to delete a user
-        window.deleteUser = (userId) => {
+        window.deleteUser = async (userId) => {
             if (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') {
                 showCustomAlert('شما اجازه حذف کاربر را ندارید.');
                 return;
             }
             showCustomConfirm('آیا مطمئن هستید که می‌خواهید این کاربر را حذف کنید؟', async (confirmed) => {
                 if (confirmed) {
+                    if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
                     showStatus(`در حال حذف کاربر ${userId}...`);
-                    // Simulate API call
-                    // In a real app, you'd send to your backend:
-                    // try {
-                    //     const response = await fetch(`${API_BASE_URL}/users/${userId}?company_name=${encodeURIComponent(currentUser.company_name)}`, {
-                    //         method: 'DELETE',
-                    //     });
-                    //     if (!response.ok) {
-                    //         const errorData = await response.json();
-                    //         throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
-                    //     }
-                    //     showStatus('کاربر با موفقیت حذف شد.');
-                    //     showCustomAlert('کاربر با موفقیت حذف شد.');
-                    //     fetchUsers();
-                    // } catch (error) {
-                    //     console.error('Error deleting user:', error);
-                    //     showStatus(`خطا در حذف کاربر: ${error.message}`);
-                    //     showCustomAlert(`خطا در حذف کاربر: ${error.message}`);
-                    // }
-                    setTimeout(() => {
-                        const initialLength = simulatedUsers.length;
-                        simulatedUsers = simulatedUsers.filter(u => u.id !== userId);
-                        if (simulatedUsers.length < initialLength) {
-                            showStatus('کاربر با موفقیت حذف شد.');
-                            showCustomAlert('کاربر با موفقیت حذف شد.');
-                            fetchUsers(); // Refresh the list
-                        } else {
-                            showCustomAlert('خطا: کاربر برای حذف یافت نشد.');
-                            showStatus('خطا: کاربر برای حذف یافت نشد.');
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/users/${userId}?company_name=${encodeURIComponent(currentUser.company_name)}`, {
+                            method: 'DELETE',
+                        });
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`HTTP error! status: ${response.status}, Message: ${errorData.message}`);
                         }
-                    }, 1000);
+                        showStatus('کاربر با موفقیت حذف شد.');
+                        showCustomAlert('کاربر با موفقیت حذف شد.');
+                        fetchUsers();
+                    } catch (error) {
+                        console.error('Error deleting user:', error);
+                        showStatus(`خطا در حذف کاربر: ${error.message}`);
+                        showCustomAlert(`خطا در حذف کاربر: ${error.message}`);
+                    }
                 }
             });
         };
 
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => { // Made async here
             console.log('DOM Content Loaded. Initializing application...');
             showStatus('برنامه در حال بارگذاری است...');
 
@@ -2146,6 +2102,10 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
                 try {
                     currentUser = JSON.parse(storedUser);
                     console.log('Current User Loaded:', currentUser);
+                    
+                    // NEW: Fetch latest company settings to ensure template path is up-to-date
+                    await fetchCompanySettings(); 
+
                     if (currentUser.company_name && currentUser.id && currentUser.role && currentUser.email) {
                         showStatus(`خوش آمدید، ${currentUser.email} در شرکت ${currentUser.company_name}. نقش: ${currentUser.role}`);
                         applyUserPermissions(); // Apply permissions early
@@ -2380,7 +2340,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
                 }
 
                 const userData = { email, password, role, company_name: companyName };
-                const success = await addUser(userData); // Call the simulated addUser function
+                const success = await addUser(userData); 
                 if (success) {
                     closeModal(addUserModal);
                 }

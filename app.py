@@ -37,9 +37,12 @@ os.makedirs(COMPANY_TEMPLATES_BASE_DIR, exist_ok=True) # Ensure templates direct
 
 def get_db_path(company_name):
     """Constructs the database path for a given company."""
-    db_dir = os.path.join(TENANT_DB_BASE_DIR, company_name)
+    clean_company_name = "".join(c for c in company_name if c.isalnum() or c in (' ', '-', '_')).strip()
+    if not clean_company_name:
+        raise ValueError("Company name cannot be empty or contain only special characters.")
+    db_dir = os.path.join(TENANT_DB_BASE_DIR, clean_company_name) # Use clean name for directory
     os.makedirs(db_dir, exist_ok=True) # Ensure company-specific directory exists
-    return os.path.join(db_dir, f'{company_name}.db')
+    return os.path.join(db_dir, f'{clean_company_name}.db') # Use clean name for db file
 
 def init_db(company_name):
     """Initializes the database schema for a new company."""
@@ -157,8 +160,11 @@ def create_company():
         return jsonify({"message": "Company name, admin email, and password are required"}), 400
 
     # Check if company already exists (by checking if its DB exists)
-    if os.path.exists(get_db_path(company_name)):
-        return jsonify({"message": f"Company '{company_name}' already exists"}), 409
+    try:
+        if os.path.exists(get_db_path(company_name)):
+            return jsonify({"message": f"Company '{company_name}' already exists"}), 409
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         init_db(company_name)
@@ -192,9 +198,12 @@ def login():
     if not all([email, password, company_name]):
         return jsonify({"message": "Email, password, and company name are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -240,9 +249,12 @@ def add_user():
     if not all([company_name, email, password]):
         return jsonify({"message": "Company name, email, and password are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -267,9 +279,12 @@ def get_users():
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -292,9 +307,12 @@ def update_user_role(user_id):
     if not all([company_name, new_role]):
         return jsonify({"message": "Company name and new role are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -318,9 +336,12 @@ def delete_user(user_id):
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -346,9 +367,12 @@ def get_company_settings():
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -381,9 +405,12 @@ def update_company_settings():
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -471,9 +498,12 @@ def add_organization():
     if not all([company_name, name]):
         return jsonify({"message": "Company name and organization name are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -499,9 +529,12 @@ def get_organizations():
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -527,9 +560,12 @@ def get_organization(org_id):
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -560,9 +596,12 @@ def update_organization(org_id):
     if not all([company_name, name]):
         return jsonify({"message": "Company name and organization name are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -589,9 +628,12 @@ def delete_organization(org_id):
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -630,9 +672,12 @@ def add_contact():
     if not all([company_name, first_name, last_name]):
         return jsonify({"message": "Company name, first name, and last name are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -657,9 +702,12 @@ def get_contacts():
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -698,9 +746,12 @@ def get_contact(contact_id):
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -738,9 +789,12 @@ def update_contact(contact_id):
     if not all([company_name, first_name, last_name]):
         return jsonify({"message": "Company name, first name, and last name are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -765,9 +819,12 @@ def delete_contact(contact_id):
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -802,12 +859,18 @@ def generate_letter():
     contact_id = data.get('contact_id')
     user_id = data.get('user_id') # User who generated the letter
 
+    print(f"DEBUG: generate_letter called. company_name: {company_name}, organization_id: {organization_id}, contact_id: {contact_id}")
+
     if not all([company_name, subject, body, letter_type, user_id]):
         return jsonify({"message": "Company name, subject, body, letter type, and user ID are required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' database not found."}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' database not found."}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
+
 
     conn = None
     try:
@@ -823,6 +886,7 @@ def generate_letter():
         company_full_name_footer = settings['company_full_name_footer'] if settings else f"شرکت {company_name}"
 
         if not letter_template_path or not os.path.exists(letter_template_path):
+            print(f"DEBUG: Template file not found or not configured: {letter_template_path}")
             return jsonify({"message": "No letter template configured or template file not found. Please upload a .docx template in settings."}), 400
 
         # 2. Generate Persian date and Gregorian date
@@ -852,12 +916,20 @@ def generate_letter():
             org = cursor.fetchone()
             if org:
                 organization_name = org['name']
+            print(f"DEBUG: Organization found: {organization_name}")
+        else:
+            print("DEBUG: No organization_id provided.")
         
         if contact_id:
             cursor.execute("SELECT first_name, last_name FROM contacts WHERE id = ?", (contact_id,))
             contact = cursor.fetchone()
             if contact:
                 contact_name = f"{contact['first_name']} {contact['last_name']}"
+                print(f"DEBUG: Contact found: {contact_name}")
+            else:
+                print(f"DEBUG: No contact found in DB for contact_id: {contact_id}")
+        else:
+            print("DEBUG: No contact_id provided.")
 
         # 6. Load DOCX template and replace placeholders using the robust function
         doc = Document(letter_template_path)
@@ -918,8 +990,9 @@ def generate_letter():
             "letter_content": full_letter_text # Add the full letter text
         }), 201
 
-    except FileNotFoundError:
-        return jsonify({"message": f"Letter template not found at {letter_template_path}. Please check settings."}), 404
+    except FileNotFoundError as e:
+        print(f"DEBUG: FileNotFoundError during generation: {e}")
+        return jsonify({"message": f"Letter template not found at {letter_template_path}. Please check settings."}), 400
     except Exception as e:
         print(f"Error generating or saving letter: {e}")
         return jsonify({"message": f"Error generating or saving letter: {str(e)}"}), 500
@@ -936,9 +1009,12 @@ def get_letters():
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     try:
         conn = get_db_connection(company_name)
@@ -972,9 +1048,13 @@ def get_letter(letter_id):
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
+
 
     conn = None
     try:
@@ -1026,16 +1106,21 @@ def get_letter(letter_id):
 
 
 @app.route('/api/letters/download/<int:letter_id>', methods=['GET'])
-def download_letter(letter_id):
+def download_letter(letter_id): # letter_id is now correctly passed as an argument
     """Serves the generated DOCX letter file for download."""
     company_name = request.args.get('company_name')
+
+    print(f"DEBUG: Download request received for letter_id: {letter_id}, company_name: {company_name}") # Debug print
 
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
 
-    db_path = get_db_path(company_name)
-    if not os.path.exists(db_path):
-        return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    try:
+        db_path = get_db_path(company_name)
+        if not os.path.exists(db_path):
+            return jsonify({"message": f"Company '{company_name}' not found"}), 404
+    except ValueError as ve:
+        return jsonify({"message": str(ve)}), 400
 
     conn = None
     try:
@@ -1045,19 +1130,30 @@ def download_letter(letter_id):
         letter = cursor.fetchone()
         conn.close()
 
-        if not letter or not letter['local_file_path'] or not os.path.exists(letter['local_file_path']):
-            return jsonify({"message": "Letter file not found on server"}), 404
+        print(f"DEBUG: Fetched letter data from DB: {letter}") # Debug print
         
-        directory = os.path.dirname(letter['local_file_path'])
-        original_filename = os.path.basename(letter['local_file_path'])
+        if not letter:
+            print(f"DEBUG: Letter with ID {letter_id} not found in DB.") # Debug print
+            return jsonify({"message": "Letter file not found in database record"}), 404
+
+        local_file_path = letter['local_file_path']
+        print(f"DEBUG: local_file_path from DB: {local_file_path}") # Debug print
+        print(f"DEBUG: Does file exist at path '{local_file_path}'? {os.path.exists(local_file_path)}") # Debug print
+
+        if not local_file_path or not os.path.exists(local_file_path):
+            print(f"DEBUG: File does not exist at the reported path: {local_file_path}") # Debug print
+            return jsonify({"message": "Letter file not found on server or path is invalid"}), 404
+        
+        directory = os.path.dirname(local_file_path)
+        original_filename = os.path.basename(local_file_path)
 
         # Encode filename for Content-Disposition header
-        # Use 'utf-8' for filename and then quote it for URL safety
         encoded_filename = urllib.parse.quote(original_filename.encode('utf-8'))
         
         # Create a Flask Response object and manually set Content-Disposition
         response = send_from_directory(directory, original_filename, as_attachment=True)
         response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
+        print(f"DEBUG: Sending file: {local_file_path} as {original_filename}") # Debug print
         return response
 
     except Exception as e:
