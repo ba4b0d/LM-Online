@@ -149,7 +149,7 @@
 
         <!-- Tabs Navigation -->
         <div class="flex border-b border-gray-200 mb-6">
-            <button class="tab-button active px-6 py-3 text-lg font-medium text-gray-700 hover:text-indigo-600 focus:outline-none" data-tab="dashboard">
+            <button class="tab-button px-6 py-3 text-lg font-medium text-gray-700 hover:text-indigo-600 focus:outline-none active" data-tab="dashboard">
                 <i class="fas fa-home ml-2"></i>داشبورد
             </button>
             <button class="tab-button px-6 py-3 text-lg font-medium text-gray-700 hover:text-indigo-600 focus:outline-none" data-tab="letter">
@@ -167,14 +167,25 @@
         </div>
 
         <!-- Tab Content: داشبورد -->
-        <div id="dashboard" class="tab-content active p-4">
+        <div id="dashboard" class="tab-content p-4 active">
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">داشبورد</h2>
-            <p class="text-gray-700 mb-4">به سیستم مدیریت نامه‌نگاری و CRM خوش آمدید. از طریق برگه‌های بالا به بخش‌های مختلف دسترسی پیدا کنید.</p>
-            <div class="bg-indigo-50 p-6 rounded-lg shadow-md">
-                <h3 class="text-xl font-semibold text-indigo-800 mb-3">اطلاعات کاربری شما</h3>
-                <p class="text-gray-700 mb-2"><strong>شرکت:</strong> <span id="dashboard-company-name"></span></p>
-                <p class="text-gray-700 mb-2"><strong>ایمیل:</strong> <span id="dashboard-user-email"></span></p>
-                <p class="text-gray-700"><strong>نقش:</strong> <span id="dashboard-user-role"></span></p>
+            <p class="text-gray-700 mb-6">به سیستم مدیریت نامه‌نگاری و CRM خوش آمدید. از طریق برگه‌های بالا به بخش‌های مختلف دسترسی پیدا کنید.</p>
+            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-6 shadow-md">
+                <h3 class="text-xl font-semibold text-indigo-800 mb-4">اطلاعات کاربری شما</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+                    <div>
+                        <p class="font-medium">شرکت:</p>
+                        <p id="dashboard-company-name" class="text-lg font-bold text-indigo-700"></p>
+                    </div>
+                    <div>
+                        <p class="font-medium">نام کاربری (ایمیل):</p>
+                        <p id="dashboard-user-email" class="text-lg font-bold text-indigo-700"></p>
+                    </div>
+                    <div>
+                        <p class="font-medium">نقش:</p>
+                        <p id="dashboard-user-role" class="text-lg font-bold text-indigo-700"></p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -853,7 +864,7 @@
                     settingsTabButton.style.display = 'none'; // Hide tab button
                     // If settings tab is active, switch to another tab
                     if (document.getElementById('settings').classList.contains('active')) {
-                        activateTab('dashboard'); // Switch to dashboard tab
+                        activateTab('letter'); // Switch to letter tab
                     }
                 } else {
                     settingsTabButton.style.display = 'flex'; // Show tab button for admin/superadmin
@@ -941,7 +952,7 @@
                 } else if (tabId === 'settings') {
                     // Fetch and populate company settings
                     await fetchCompanySettings();
-                } else if (tabId === 'dashboard') {
+                } else if (tabId === 'dashboard') { // NEW: Dashboard tab logic
                     // Populate dashboard info
                     document.getElementById('dashboard-company-name').textContent = currentUser.company_name || 'نامشخص';
                     document.getElementById('dashboard-user-email').textContent = currentUser.email || 'نامشخص';
@@ -1610,6 +1621,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
 
         // Open Contact Selection Modal
         const openContactSelectionDialog = async (searchTerm = '') => {
+            console.log('openContactSelectionDialog called with searchTerm:', searchTerm); // Debugging
             if (!currentUser.company_name) { showCustomAlert('لطفاً ابتدا وارد سیستم شوید.'); return; }
             openModal(document.getElementById('selectContactModal'));
             showStatus('در حال بارگذاری مخاطبین برای انتخاب...');
@@ -1617,13 +1629,16 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
             let url = `${API_BASE_URL}/contacts?company_name=${encodeURIComponent(currentUser.company_name)}&search=${encodeURIComponent(searchTerm)}`;
             if (selectedOrgIdHidden && selectedOrgIdHidden.value) {
                 url += `&organization_id=${selectedOrgIdHidden.value}`;
+                console.log('Filtering contacts by organization_id:', selectedOrgIdHidden.value); // Debugging
             }
+            console.log('Fetching contacts from URL:', url); // Debugging
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const contacts = await response.json();
+                console.log('Fetched contacts:', contacts); // Debugging
                 populateContactSelectionTable(contacts);
                 showStatus(`نمایش ${contacts.length} مخاطب برای انتخاب.`);
             } catch (error) {
@@ -1635,6 +1650,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
 
         // Populate table in Contact Selection Modal
         const populateContactSelectionTable = (contacts) => {
+            console.log('populateContactSelectionTable called with contacts:', contacts); // Debugging
             const selectContactTableBody = document.getElementById('select-contact-table-body');
             if (!selectContactTableBody) { console.error('selectContactTableBody not found'); return; }
             selectContactTableBody.innerHTML = '';
@@ -1653,12 +1669,14 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
                     <td class="py-3 px-6 text-right">${contact.last_name}</td>
                     <td class="py-3 px-6 text-right">${orgName}</td>
                 `;
-                row.addEventListener('click', () => selectContactFromDialog(contact.id, contactFullName, orgId, orgName));
+                // Corrected: Pass contact.organization_id explicitly
+                row.addEventListener('click', () => selectContactFromDialog(contact.id, contactFullName, contact.organization_id, orgName));
             });
         };
 
         // Select Contact from Dialog
         const selectContactFromDialog = (contactId, contactFullName, orgId, orgName) => {
+            console.log('selectContactFromDialog called with:', { contactId, contactFullName, orgId, orgName }); // Debugging
             const selectedContactIdHidden = document.getElementById('selected-contact-id');
             const entryContactLetter = document.getElementById('contact-select');
             const selectedOrgIdHidden = document.getElementById('selected-org-id');
@@ -1696,7 +1714,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
             const bodyTextarea = document.getElementById('body');
             const letterTypeSelect = document.getElementById('letter-type');
             const selectedOrgIdHidden = document.getElementById('selected-org-id');
-            const selectedContactIdHidden = document.getElementById('selected-contact-id');
+            const selectedContactIdHidden = document.getElementById('selected.contact-id'); // Typo: selected.contact-id -> selected-contact-id
 
             const letterData = {
                 company_name: currentUser.company_name,
@@ -2131,7 +2149,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
                     if (currentUser.company_name && currentUser.id && currentUser.role && currentUser.email) {
                         showStatus(`خوش آمدید، ${currentUser.email} در شرکت ${currentUser.company_name}. نقش: ${currentUser.role}`);
                         applyUserPermissions(); // Apply permissions early
-                        activateTab('dashboard'); // Activate the dashboard tab
+                        activateTab('dashboard'); // Activate the dashboard tab by default
                     } else {
                         console.log('Incomplete currentUser data in localStorage. Redirecting to login.');
                         showCustomAlert('اطلاعات کاربری ناقص است. لطفاً دوباره وارد شوید.');
@@ -2416,6 +2434,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
                 }
             });
 
+
             if (document.getElementById('change-password-btn')) document.getElementById('change-password-btn').addEventListener('click', () => {
                 showStatus('تغییر رمز عبور (هنوز پیاده‌سازی نشده)');
                 showCustomAlert('تغییر رمز عبور هنوز پیاده‌سازی نشده است.');
@@ -2430,7 +2449,7 @@ ${currentUser.company_full_name_footer || currentUser.company_name}
 
 
             // Letter Download Modal Event Listeners
-            if (closeDownloadModal) {
+            if (letterDownloadModal) { // Check if element exists before adding listener
                 closeDownloadModal.addEventListener('click', () => {
                     closeModal(letterDownloadModal);
                 });
