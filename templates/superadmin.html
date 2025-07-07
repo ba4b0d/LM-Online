@@ -4,109 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پنل سوپرادمین</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Vazirmatn Font -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 1s ease-in-out;
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-icon {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            color: #9ca3af; /* gray-400 */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto p-6">
-        <!-- دکمه خروج -->
-        <div class="flex justify-end mb-4">
-            <a href="/superadmin/logout" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">خروج</a>
-        </div>
+<body class="bg-gray-900 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="container mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-4 rtl:space-x-reverse">
+                <i class="fas fa-user-shield text-4xl text-indigo-400"></i>
+                <h1 class="text-3xl font-bold text-white">پنل مدیریت سوپرادمین</h1>
+            </div>
+            <a href="/superadmin/logout" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200 flex items-center">
+                <i class="fas fa-sign-out-alt ml-2"></i>
+                <span>خروج</span>
+            </a>
+        </header>
 
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">پنل مدیریت سوپرادمین</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- بخش ایجاد شرکت جدید -->
+            <div class="lg:col-span-1">
+                <div class="glass-card p-6 rounded-2xl shadow-2xl h-full">
+                    <h2 class="text-2xl font-semibold text-white mb-6 border-b border-gray-700 pb-4">ایجاد شرکت جدید</h2>
+                    <form id="create-company-form" class="space-y-6">
+                        <div class="input-group">
+                            <i class="fas fa-building input-icon"></i>
+                            <input type="text" id="company-name" placeholder="نام شرکت" required class="w-full pr-10 pl-4 py-3 text-gray-300 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="admin-email" placeholder="ایمیل ادمین" required class="w-full pr-10 pl-4 py-3 text-gray-300 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="admin-password" placeholder="رمز عبور ادمین" required class="w-full pr-10 pl-4 py-3 text-gray-300 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
+                        </div>
+                        <button type="submit" class="w-full py-3 font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 transition duration-200">
+                            <i class="fas fa-plus-circle ml-2"></i>
+                            ایجاد شرکت
+                        </button>
+                    </form>
+                    <p id="form-message" class="text-center text-sm mt-4"></p>
+                </div>
+            </div>
 
-        <!-- بخش ایجاد شرکت جدید -->
-        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">ایجاد شرکت جدید</h2>
-            <form id="create-company-form" class="space-y-4">
-                <div>
-                    <label for="company-name" class="block text-gray-700 text-sm font-bold mb-2">نام شرکت:</label>
-                    <input type="text" id="company-name" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="مثال: شرکت آلفا" required>
+            <!-- بخش لیست شرکت‌ها -->
+            <div class="lg:col-span-2">
+                <div class="glass-card p-6 rounded-2xl shadow-2xl">
+                    <h2 class="text-2xl font-semibold text-white mb-6 border-b border-gray-700 pb-4">لیست شرکت‌های موجود</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="py-3 px-6 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">نام شرکت</th>
+                                    <th class="py-3 px-6 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="companies-table-body" class="text-gray-300">
+                                <!-- شرکت‌ها به صورت پویا اینجا قرار می‌گیرند -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div>
-                    <label for="admin-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل ادمین:</label>
-                    <input type="email" id="admin-email" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="admin@alpha.com" required>
-                </div>
-                <div>
-                    <label for="admin-password" class="block text-gray-700 text-sm font-bold mb-2">رمز عبور ادمین:</label>
-                    <input type="password" id="admin-password" class="shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                </div>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-200">ایجاد شرکت</button>
-            </form>
-            <p id="form-message" class="text-sm mt-4"></p>
-        </div>
-
-        <!-- بخش لیست شرکت‌ها -->
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">لیست شرکت‌های موجود</h2>
-            <div class="overflow-x-auto rounded-lg shadow-md">
-                <table class="min-w-full bg-white border border-gray-200">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-right border-b">ردیف</th>
-                            <th class="py-3 px-6 text-right border-b">نام شرکت</th>
-                            <th class="py-3 px-6 text-center border-b">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="companies-table-body" class="text-gray-700 text-sm font-light">
-                        <!-- شرکت‌ها به صورت پویا اینجا قرار می‌گیرند -->
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 
     <script>
-        // بقیه کدهای جاوا اسکریپت بدون تغییر باقی می‌ماند
         const API_BASE_URL = 'http://localhost:5000/api';
 
         function showMessage(message, isError = false) {
             const formMessage = document.getElementById('form-message');
             formMessage.textContent = message;
-            formMessage.className = isError ? 'text-red-500 text-sm mt-4' : 'text-green-600 text-sm mt-4';
+            formMessage.className = isError ? 'text-center text-sm mt-4 text-red-400' : 'text-center text-sm mt-4 text-green-400';
         }
 
         async function fetchAndDisplayCompanies() {
             const tableBody = document.getElementById('companies-table-body');
-            tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">در حال بارگذاری...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="2" class="text-center p-4 text-gray-400">در حال بارگذاری...</td></tr>';
 
             try {
                 const response = await fetch(`${API_BASE_URL}/superadmin/companies`);
                 if (!response.ok) {
-                    if (response.status === 401) { // Unauthorized
-                        window.location.href = '/superadmin/login';
-                        return;
-                    }
                     throw new Error('خطا در دریافت لیست شرکت‌ها');
                 }
                 const companies = await response.json();
                 tableBody.innerHTML = '';
                 
                 if (companies.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">هیچ شرکتی یافت نشد.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="2" class="text-center p-4 text-gray-400">هیچ شرکتی یافت نشد.</td></tr>';
                     return;
                 }
 
-                companies.forEach((company, index) => {
+                companies.forEach((company) => {
                     const row = tableBody.insertRow();
+                    row.className = 'border-b border-gray-700 hover:bg-gray-800 transition-colors';
                     row.innerHTML = `
-                        <td class="py-3 px-6 text-right border-b">${index + 1}</td>
-                        <td class="py-3 px-6 text-right border-b">${company.name}</td>
-                        <td class="py-3 px-6 text-center border-b">
-                            <button class="text-red-500 hover:text-red-700" onclick="deleteCompany('${company.name}')">حذف</button>
+                        <td class="py-4 px-6 font-medium">${company.name}</td>
+                        <td class="py-4 px-6 text-center">
+                            <button class="text-red-400 hover:text-red-500 transition-colors" onclick="deleteCompany('${company.name}')">
+                                <i class="fas fa-trash-alt ml-1"></i>
+                                حذف
+                            </button>
                         </td>
                     `;
                 });
 
             } catch (error) {
-                tableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-red-500">${error.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="2" class="text-center p-4 text-red-400">${error.message}</td></tr>`;
             }
         }
 
@@ -136,12 +169,7 @@
                     document.getElementById('create-company-form').reset();
                     fetchAndDisplayCompanies();
                 } else {
-                     if (response.status === 401) {
-                        showMessage('دسترسی غیر مجاز. لطفا دوباره وارد شوید.', true);
-                        setTimeout(() => window.location.href = '/superadmin/login', 2000);
-                    } else {
-                        showMessage(data.message || 'خطا در ایجاد شرکت', true);
-                    }
+                    showMessage(data.message || 'خطا در ایجاد شرکت', true);
                 }
 
             } catch (error) {
@@ -151,7 +179,7 @@
         });
         
         async function deleteCompany(companyName) {
-            if (!confirm(`آیا از حذف شرکت "${companyName}" و تمام اطلاعات آن مطمئن هستید؟ این عمل غیرقابل بازگشت است.`)) {
+            if (!confirm(`آیا از حذف کامل شرکت "${companyName}" و تمام اطلاعات آن مطمئن هستید؟ این عمل غیرقابل بازگشت است.`)) {
                 return;
             }
             
@@ -168,12 +196,7 @@
                     showMessage(data.message, false);
                     fetchAndDisplayCompanies();
                 } else {
-                    if (response.status === 401) {
-                        showMessage('دسترسی غیر مجاز. لطفا دوباره وارد شوید.', true);
-                        setTimeout(() => window.location.href = '/superadmin/login', 2000);
-                    } else {
-                        showMessage(data.message || 'خطا در حذف شرکت', true);
-                    }
+                    showMessage(data.message || 'خطا در حذف شرکت', true);
                 }
             } catch (error) {
                 showMessage('خطا در ارتباط با سرور', true);

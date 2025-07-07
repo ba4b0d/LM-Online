@@ -3,81 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ورود به سیستم CRM</title>
+    <title>ورود به سیستم RayaCRM</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Vazirmatn Font -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
+            font-family: 'Vazirmatn', sans-serif;
         }
         .login-container {
-            background-color: #ffffff;
-            padding: 2.5rem; /* p-10 */
-            border-radius: 0.75rem; /* rounded-lg */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
-            width: 100%;
-            max-width: 400px; /* max-w-md */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeIn 1s ease-in-out;
         }
-        input[type="text"],
-        input[type="email"], /* Added email type */
-        input[type="password"] {
-            @apply shadow appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline;
+        .input-group {
+            position: relative;
         }
-        button {
-            @apply bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md w-full focus:outline-none focus:shadow-outline transition duration-200;
+        .input-icon {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            color: #9ca3af; /* gray-400 */
         }
-        .error-message {
-            @apply text-red-500 text-sm mt-2;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
-<body>
-    <div class="login-container">
-        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">ورود به سیستم</h2>
+<body class="bg-gray-900 bg-gradient-to-br from-indigo-900 via-gray-900 to-purple-900 flex items-center justify-center min-h-screen">
+    <div class="login-container w-full max-w-md p-8 space-y-8 rounded-2xl shadow-2xl">
+        <div class="text-center">
+            <i class="fas fa-rocket text-5xl text-indigo-400 mb-4"></i>
+            <h2 class="text-3xl font-bold text-white">ورود به RayaCRM</h2>
+            <p class="text-gray-400 mt-2">اطلاعات حساب کاربری خود را وارد کنید.</p>
+        </div>
         <form id="login-form" class="space-y-6">
-            <div>
-                <label for="company-name-login" class="block text-gray-700 text-sm font-bold mb-2">نام شرکت:</label>
-                <input type="text" id="company-name-login" placeholder="نام شرکت" required>
+            <div class="input-group">
+                <i class="fas fa-building input-icon"></i>
+                <input type="text" id="company-name-login" placeholder="نام شرکت" required class="w-full pr-10 pl-4 py-3 text-gray-300 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
             </div>
-            <div>
-                <label for="email-login" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label>
-                <input type="email" id="email-login" placeholder="ایمیل" required>
+            <div class="input-group">
+                <i class="fas fa-envelope input-icon"></i>
+                <input type="email" id="email-login" placeholder="ایمیل" required class="w-full pr-10 pl-4 py-3 text-gray-300 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
             </div>
-            <div>
-                <label for="password-login" class="block text-gray-700 text-sm font-bold mb-2">رمز عبور:</label>
-                <input type="password" id="password-login" placeholder="رمز عبور" required>
+            <div class="input-group">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" id="password-login" placeholder="رمز عبور" required class="w-full pr-10 pl-4 py-3 text-gray-300 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200">
             </div>
-            <button type="submit">ورود</button>
+            <button type="submit" class="w-full py-3 font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 transition duration-200">
+                ورود به سیستم
+            </button>
         </form>
-        <p id="login-message" class="error-message text-center"></p>
+        <p id="login-message" class="text-center text-sm"></p>
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:5000/api'; // Base URL for your Flask API
+        const API_BASE_URL = 'http://localhost:5000/api';
 
         document.addEventListener('DOMContentLoaded', () => {
             const loginForm = document.getElementById('login-form');
             const companyNameInput = document.getElementById('company-name-login');
-            const emailInput = document.getElementById('email-login'); // Changed from username to email
+            const emailInput = document.getElementById('email-login');
             const passwordInput = document.getElementById('password-login');
             const loginMessage = document.getElementById('login-message');
 
             loginForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 const companyName = companyNameInput.value.trim();
-                const email = emailInput.value.trim(); // Changed from username to email
+                const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
 
-                loginMessage.textContent = 'در حال ورود...';
-                loginMessage.classList.remove('text-red-500');
-                loginMessage.classList.add('text-gray-600');
+                loginMessage.textContent = 'در حال بررسی اطلاعات...';
+                loginMessage.className = 'text-center text-sm text-yellow-400';
 
                 try {
                     const response = await fetch(`${API_BASE_URL}/login`, {
@@ -85,39 +89,31 @@
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ company_name: companyName, email: email, password: password }), // Changed username to email
+                        body: JSON.stringify({ company_name: companyName, email: email, password: password }),
                     });
 
                     const data = await response.json();
 
                     if (response.ok) {
-                        // Store user info in localStorage (or sessionStorage)
                         localStorage.setItem('currentUser', JSON.stringify({
                             id: data.user_id,
                             role: data.role,
                             company_name: data.company_name,
-                            email: data.user_email // Store email
+                            email: data.user_email
                         }));
                         loginMessage.textContent = 'ورود موفقیت‌آمیز! در حال انتقال...';
-                        loginMessage.classList.remove('text-red-500');
-                        loginMessage.classList.add('text-green-600');
-                        
-                        // Redirect based on user role
-                        if (data.role === 'superadmin') {
-                            window.location.href = '/superadmin_dashboard'; 
-                        } else {
-                            window.location.href = '/main_app'; 
-                        }
+                        loginMessage.className = 'text-center text-sm text-green-400';
+                        setTimeout(() => {
+                             window.location.href = '/main_app'; 
+                        }, 1000);
                     } else {
                         loginMessage.textContent = data.message || 'خطا در ورود به سیستم.';
-                        loginMessage.classList.remove('text-gray-600');
-                        loginMessage.classList.add('text-red-500');
+                        loginMessage.className = 'text-center text-sm text-red-400';
                     }
                 } catch (error) {
                     console.error('Login error:', error);
                     loginMessage.textContent = 'خطا در ارتباط با سرور.';
-                    loginMessage.classList.remove('text-gray-600');
-                    loginMessage.classList.add('text-red-500');
+                    loginMessage.className = 'text-center text-sm text-red-400';
                 }
             });
         });

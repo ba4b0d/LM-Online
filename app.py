@@ -2,17 +2,18 @@
 from flask import Flask, render_template, jsonify, request, send_from_directory, redirect, url_for, session
 import os
 import sqlite3
-import hashlib # For password hashing
+import hashlib
 from datetime import datetime
-from flask_cors import CORS # Import CORS for cross-origin requests
-import jdatetime # For Persian dates
-import io # For handling file-like objects in memory
-from docx import Document # For DOCX generation
-from docx.shared import Inches # For potentially adding images, though we'll focus on text for now
-from docx.enum.text import WD_ALIGN_PARAGRAPH # For text alignment in DOCX
-import urllib.parse # For encoding filenames in download
-import shutil # Import for directory operations
-from functools import wraps # برای ساخت decorator
+from flask_cors import CORS
+import jdatetime
+import io
+from docx import Document
+from docx.shared import Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+import urllib.parse
+import shutil
+from functools import wraps
+import collections
 
 # --- Configuration ---
 TENANT_DB_BASE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data', 'tenants')
@@ -24,12 +25,11 @@ COMPANY_TEMPLATES_BASE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file
 app = Flask(__name__)
 CORS(app)
 
-# کلید مخفی برای امن کردن سشن‌ها ضروری است
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a_very_secret_key_for_development_and_sessions')
 
 # --- Superadmin Credentials (Hardcoded) ---
 SUPERADMIN_USERNAME = "superadmin"
-SUPERADMIN_PASSWORD = "your_strong_password" # <-- یک رمز عبور قوی اینجا قرار دهید
+SUPERADMIN_PASSWORD = "your_strong_password" 
 
 # Ensure necessary directories exist at startup
 os.makedirs(TENANT_DB_BASE_DIR, exist_ok=True)
@@ -326,6 +326,42 @@ def login():
         print(f"Error during login: {e}")
         return jsonify({"message": f"Error during login: {str(e)}"}), 500
 
+@app.route('/api/user/change-password', methods=['POST'])
+def change_password():
+    """Allows a logged-in user to change their password."""
+    data = request.get_json()
+    user_id = data.get('user_id')
+    company_name = data.get('company_name')
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+
+    if not all([user_id, company_name, current_password, new_password]):
+        return jsonify({"message": "All fields are required"}), 400
+
+    try:
+        conn = get_db_connection(company_name)
+        cursor = conn.cursor()
+        cursor.execute("SELECT password_hash FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            conn.close()
+            return jsonify({"message": "User not found"}), 404
+
+        if hashlib.sha256(current_password.encode()).hexdigest() != user['password_hash']:
+            conn.close()
+            return jsonify({"message": "رمز عبور فعلی اشتباه است"}), 403
+
+        new_password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+        cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, user_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "رمز عبور با موفقیت تغییر کرد"}), 200
+
+    except Exception as e:
+        print(f"Error changing password: {e}")
+        return jsonify({"message": f"Error changing password: {str(e)}"}), 500
 
 # --- User Management (Admin only) ---
 @app.route('/api/users', methods=['POST'])
@@ -800,7 +836,6 @@ def generate_letter():
         letter_id = cursor.lastrowid
         conn.close()
 
-        # --- FIX: Re-read the saved document to get final text content ---
         final_doc = Document(local_file_path)
         full_letter_text = "\n".join([p.text for p in final_doc.paragraphs])
         
@@ -860,7 +895,6 @@ def get_letter(letter_id):
         if not letter:
             return jsonify({"message": "Letter not found"}), 404
         
-        # --- FIX: Read content from the saved file for preview ---
         letter_content_text = ""
         if letter['local_file_path'] and os.path.exists(letter['local_file_path']):
             doc = Document(letter['local_file_path'])
@@ -897,6 +931,54 @@ def download_letter(letter_id):
     except Exception as e:
         return jsonify({"message": f"Error serving letter file: {str(e)}"}), 500
 
+# --- NEW: Reporting Endpoints ---
+@app.route('/api/reports/letters-by-period', methods=['GET'])
+def get_letters_by_period_report():
+    """Generates a report of letters created per period (daily, weekly, monthly, yearly)."""
+    company_name = request.args.get('company_name')
+    period = request.args.get('period', 'monthly') # Get period, default to monthly
+
+    if not company_name:
+        return jsonify({"message": "Company name is required"}), 400
+    
+    if period not in ['daily', 'weekly', 'monthly', 'yearly']:
+        return jsonify({"message": "Invalid period specified"}), 400
+
+    try:
+        conn = get_db_connection(company_name)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT current_gregorian_date FROM letters")
+        dates = cursor.fetchall()
+        conn.close()
+
+        counts = collections.defaultdict(int)
+        for row in dates:
+            try:
+                date_obj = datetime.strptime(row['current_gregorian_date'].split(' ')[0], '%Y-%m-%d')
+                j_date = jdatetime.date.fromgregorian(date=date_obj)
+                
+                if period == 'daily':
+                    key = j_date.strftime('%Y-%m-%d')
+                elif period == 'weekly':
+                    start_of_week = j_date - jdatetime.timedelta(days=j_date.weekday())
+                    key = start_of_week.strftime('%Y-%m-%d')
+                elif period == 'monthly':
+                    key = j_date.strftime('%Y-%m')
+                elif period == 'yearly':
+                    key = j_date.strftime('%Y')
+                
+                counts[key] += 1
+            except (ValueError, TypeError):
+                continue
+        
+        sorted_counts = dict(sorted(counts.items()))
+
+        return jsonify(sorted_counts), 200
+
+    except Exception as e:
+        print(f"Error generating report: {e}")
+        return jsonify({"message": f"Error generating report: {str(e)}"}), 500
 
 # --- Main execution block ---
 if __name__ == '__main__':
