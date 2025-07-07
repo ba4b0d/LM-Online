@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ورود به سیستم CRM</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font (for a modern look) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -103,8 +101,13 @@
                         loginMessage.textContent = 'ورود موفقیت‌آمیز! در حال انتقال...';
                         loginMessage.classList.remove('text-red-500');
                         loginMessage.classList.add('text-green-600');
-                        // Redirect to the main application page
-                        window.location.href = '/main_app'; 
+                        
+                        // Redirect based on user role
+                        if (data.role === 'superadmin') {
+                            window.location.href = '/superadmin_dashboard'; 
+                        } else {
+                            window.location.href = '/main_app'; 
+                        }
                     } else {
                         loginMessage.textContent = data.message || 'خطا در ورود به سیستم.';
                         loginMessage.classList.remove('text-gray-600');

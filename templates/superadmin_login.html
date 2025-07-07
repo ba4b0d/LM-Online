@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود سوپرادمین</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-container {
+            background-color: #1f2937; /* Darker gray */
+            padding: 2.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #374151;
+        }
+        input {
+            background-color: #374151;
+            color: #d1d5db;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 class="text-3xl font-bold text-center text-gray-200 mb-8">ورود سوپرادمین</h2>
+        <form id="superadmin-login-form" class="space-y-6">
+            <div>
+                <label for="username" class="block text-gray-400 text-sm font-bold mb-2">نام کاربری:</label>
+                <input type="text" id="username" class="shadow appearance-none border border-gray-600 rounded-md w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline" required>
+            </div>
+            <div>
+                <label for="password" class="block text-gray-400 text-sm font-bold mb-2">رمز عبور:</label>
+                <input type="password" id="password" class="shadow appearance-none border border-gray-600 rounded-md w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline" required>
+            </div>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md w-full focus:outline-none focus:shadow-outline transition duration-200">ورود</button>
+        </form>
+        <p id="login-message" class="text-red-400 text-sm mt-4 text-center"></p>
+    </div>
+
+    <script>
+        document.getElementById('superadmin-login-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const messageEl = document.getElementById('login-message');
+            
+            messageEl.textContent = '';
+
+            try {
+                const response = await fetch('/api/superadmin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = '/superadmin'; // Redirect to the panel
+                } else {
+                    messageEl.textContent = data.message || 'نام کاربری یا رمز عبور اشتباه است.';
+                }
+            } catch (error) {
+                messageEl.textContent = 'خطا در ارتباط با سرور.';
+            }
+        });
+    </script>
+</body>
+</html>
