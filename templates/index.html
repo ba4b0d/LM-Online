@@ -531,6 +531,7 @@
         let selectedContactIdInCrm = null;
         let currentGeneratedLetterDownloadUrl = '';
         let currentGeneratedLetterCode = '';
+        let lettersChartInstance = null;
 
         const showStatus = (message, isError = false) => {
             const statusBar = document.getElementById('status-bar');
@@ -601,11 +602,11 @@
             });
         };
 
-        const fetchAndRenderReports = async () => {
+        const fetchAndRenderReports = async (period = 'monthly') => {
             if (!currentUser.company_name) return;
             showStatus('در حال بارگذاری گزارش...');
             try {
-                const response = await fetch(`${API_BASE_URL}/reports/letters-by-month?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                const response = await fetch(`${API_BASE_URL}/reports/letters-by-period?company_name=${encodeURIComponent(currentUser.company_name)}&period=${period}`);
                 if (!response.ok) {
                     throw new Error(`خطا در دریافت داده‌های گزارش: ${response.statusText}`);
                 }
@@ -613,14 +614,14 @@
                 
                 const chartCtx = document.getElementById('lettersByMonthChart').getContext('2d');
                 
-                if (window.myLettersChart) {
-                    window.myLettersChart.destroy();
+                if (lettersChartInstance) {
+                    lettersChartInstance.destroy();
                 }
 
                 const labels = Object.keys(data);
                 const values = Object.values(data);
 
-                window.myLettersChart = new Chart(chartCtx, {
+                lettersChartInstance = new Chart(chartCtx, {
                     type: 'bar',
                     data: {
                         labels: labels,
@@ -685,7 +686,7 @@
                 if (tabId === 'crm') { await fetchOrganizations(); await fetchContacts(); }
                 else if (tabId === 'archive') { await fetchLetters(); }
                 else if (tabId === 'settings') { await fetchCompanySettings(); }
-                else if (tabId === 'reports') { await fetchAndRenderReports(); }
+                else if (tabId === 'reports') { await fetchAndRenderReports(document.getElementById('report-period-select').value); }
                 else if (tabId === 'dashboard') {
                     document.getElementById('dashboard-company-name').textContent = currentUser.company_name || 'نامشخص';
                     document.getElementById('dashboard-user-email').textContent = currentUser.email || 'نامشخص';
@@ -1518,6 +1519,9 @@
                 const element = document.getElementById('modal-letter-content');
                 const opt = { margin: 1, filename: `${currentGeneratedLetterCode}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
                 html2pdf().from(element).set(opt).save();
+            });
+            document.getElementById('report-period-select').addEventListener('change', (e) => {
+                fetchAndRenderReports(e.target.value);
             });
         });
     </script>
