@@ -478,6 +478,251 @@ def handle_user(user_id):
 
 # --- All other endpoints (Settings, Organizations, Contacts, etc.) remain the same ---
 # ... (Keep all your existing endpoints for settings, orgs, contacts here) ...
+# --- Settings, Organizations, and Contacts Endpoints ---
+
+# --- Settings Endpoints ---
+@app.route('/api/settings', methods=['GET', 'POST'])
+def handle_settings():
+    company_name = request.args.get('company_name') if request.method == 'GET' else request.json.get('company_name')
+    if not company_name:
+        return jsonify({"message": "Company name is required"}), 400
+
+    conn = get_db_connection(company_name)
+    cursor = conn.cursor()
+
+    if request.method == 'GET':
+        try:
+            cursor.execute("SELECT * FROM company_settings WHERE company_name = ?", (company_name,))
+            settings = cursor.fetchone()
+            conn.close()
+            if settings:
+                return jsonify(dict(settings)), 200
+            else:
+                return jsonify({"message": "Settings not found"}), 404
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error fetching settings: {str(e)}"}), 500
+
+    if request.method == 'POST':
+        data = request.get_json()
+        short_name = data.get('company_short_name')
+        full_name_footer = data.get('company_full_name_footer')
+        try:
+            cursor.execute("""
+                UPDATE company_settings
+                SET company_short_name = ?, company_full_name_footer = ?
+                WHERE company_name = ?
+            """, (short_name, full_name_footer, company_name))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Settings updated successfully"}), 200
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error updating settings: {str(e)}"}), 500
+
+@app.route('/api/settings/upload_template', methods=['POST'])
+def upload_template():
+    company_name = request.form.get('company_name')
+    if not company_name:
+        return jsonify({"message": "Company name is required"}), 400
+    if 'letter_template' not in request.files:
+        return jsonify({"message": "No file part"}), 400
+    file = request.files['letter_template']
+    if file.filename == '':
+        return jsonify({"message": "No selected file"}), 400
+    if file and file.filename.endswith('.docx'):
+        try:
+            company_template_dir = os.path.join(COMPANY_TEMPLATES_BASE_DIR, company_name)
+            os.makedirs(company_template_dir, exist_ok=True)
+            # Use a fixed name for the template to easily overwrite it
+            template_filename = 'template.docx'
+            template_full_path = os.path.join(company_template_dir, template_filename)
+            file.save(template_full_path)
+
+            conn = get_db_connection(company_name)
+            cursor = conn.cursor()
+            cursor.execute("UPDATE company_settings SET letter_template_path = ? WHERE company_name = ?", (template_full_path, company_name))
+            conn.commit()
+            conn.close()
+
+            return jsonify({
+                "message": "Template uploaded successfully",
+                "template_filename": template_filename,
+                "template_full_path": template_full_path
+            }), 200
+        except Exception as e:
+            return jsonify({"message": f"Error uploading template: {str(e)}"}), 500
+    else:
+        return jsonify({"message": "Invalid file type. Please upload a .docx file"}), 400
+
+
+# --- Organization Endpoints ---
+@app.route('/api/organizations', methods=['GET', 'POST'])
+def handle_organizations():
+    company_name = request.args.get('company_name') or request.json.get('company_name')
+    if not company_name:
+        return jsonify({"message": "Company name is required"}), 400
+
+    conn = get_db_connection(company_name)
+    cursor = conn.cursor()
+
+    if request.method == 'GET':
+        search_term = request.args.get('search', '')
+        query = "SELECT * FROM organizations"
+        params = []
+        if search_term:
+            query += " WHERE name LIKE ?"
+            params.append(f'%{search_term}%')
+        cursor.execute(query, params)
+        orgs = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return jsonify(orgs), 200
+
+    if request.method == 'POST':
+        data = request.get_json()
+        try:
+            cursor.execute("""
+                INSERT INTO organizations (name, industry, phone, email, address, description)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (data['name'], data.get('industry'), data.get('phone'), data.get('email'), data.get('address'), data.get('description')))
+            conn.commit()
+            new_id = cursor.lastrowid
+            cursor.execute("SELECT * FROM organizations WHERE id = ?", (new_id,))
+            new_org = dict(cursor.fetchone())
+            conn.close()
+            return jsonify(new_org), 201
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error adding organization: {str(e)}"}), 500
+
+@app.route('/api/organizations/<int:org_id>', methods=['GET', 'PUT', 'DELETE'])
+def handle_single_organization(org_id):
+    company_name = request.args.get('company_name') or request.json.get('company_name')
+    if not company_name: return jsonify({"message": "Company name is required"}), 400
+    
+    conn = get_db_connection(company_name)
+    cursor = conn.cursor()
+
+    if request.method == 'GET':
+        cursor.execute("SELECT * FROM organizations WHERE id = ?", (org_id,))
+        org = cursor.fetchone()
+        conn.close()
+        return jsonify(dict(org)) if org else ({"message": "Organization not found"}, 404)
+
+    if request.method == 'PUT':
+        data = request.get_json()
+        try:
+            cursor.execute("""
+                UPDATE organizations SET name=?, industry=?, phone=?, email=?, address=?, description=?
+                WHERE id=?
+            """, (data['name'], data.get('industry'), data.get('phone'), data.get('email'), data.get('address'), data.get('description'), org_id))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Organization updated successfully"}), 200
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error updating organization: {str(e)}"}), 500
+
+    if request.method == 'DELETE':
+        try:
+            # Also delete related contacts
+            cursor.execute("DELETE FROM contacts WHERE organization_id = ?", (org_id,))
+            cursor.execute("DELETE FROM organizations WHERE id = ?", (org_id,))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Organization and related contacts deleted successfully"}), 200
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error deleting organization: {str(e)}"}), 500
+
+
+# --- Contact Endpoints ---
+@app.route('/api/contacts', methods=['GET', 'POST'])
+def handle_contacts():
+    company_name = request.args.get('company_name') or request.json.get('company_name')
+    if not company_name:
+        return jsonify({"message": "Company name is required"}), 400
+
+    conn = get_db_connection(company_name)
+    cursor = conn.cursor()
+
+    if request.method == 'GET':
+        search_term = request.args.get('search', '')
+        org_id = request.args.get('organization_id')
+        query = """
+            SELECT c.*, o.name as organization_name FROM contacts c
+            LEFT JOIN organizations o ON c.organization_id = o.id
+        """
+        params = []
+        conditions = []
+        if search_term:
+            conditions.append("(c.first_name LIKE ? OR c.last_name LIKE ?)")
+            params.extend([f'%{search_term}%', f'%{search_term}%'])
+        if org_id:
+            conditions.append("c.organization_id = ?")
+            params.append(org_id)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        cursor.execute(query, params)
+        contacts = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return jsonify(contacts)
+
+    if request.method == 'POST':
+        data = request.get_json()
+        try:
+            cursor.execute("""
+                INSERT INTO contacts (first_name, last_name, title, organization_id, phone, email, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (data['first_name'], data['last_name'], data.get('title'), data.get('organization_id'), data.get('phone'), data.get('email'), data.get('notes')))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Contact added successfully"}), 201
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error adding contact: {str(e)}"}), 500
+
+@app.route('/api/contacts/<int:contact_id>', methods=['GET', 'PUT', 'DELETE'])
+def handle_single_contact(contact_id):
+    company_name = request.args.get('company_name') or request.json.get('company_name')
+    if not company_name: return jsonify({"message": "Company name is required"}), 400
+
+    conn = get_db_connection(company_name)
+    cursor = conn.cursor()
+
+    if request.method == 'GET':
+        cursor.execute("SELECT * FROM contacts WHERE id = ?", (contact_id,))
+        contact = cursor.fetchone()
+        conn.close()
+        return jsonify(dict(contact)) if contact else ({"message": "Contact not found"}, 404)
+
+    if request.method == 'PUT':
+        data = request.get_json()
+        try:
+            cursor.execute("""
+                UPDATE contacts SET first_name=?, last_name=?, title=?, organization_id=?, phone=?, email=?, notes=?
+                WHERE id=?
+            """, (data['first_name'], data['last_name'], data.get('title'), data.get('organization_id'), data.get('phone'), data.get('email'), data.get('notes'), contact_id))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Contact updated successfully"}), 200
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error updating contact: {str(e)}"}), 500
+
+    if request.method == 'DELETE':
+        try:
+            cursor.execute("DELETE FROM contacts WHERE id = ?", (contact_id,))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Contact deleted successfully"}), 200
+        except Exception as e:
+            conn.close()
+            return jsonify({"message": f"Error deleting contact: {str(e)}"}), 500
+
+# --- Letter Endpoints ---
+# ... (The rest of your app.py code)
 
 # --- Letter Endpoints ---
 @app.route('/api/letters/generate', methods=['POST'])
