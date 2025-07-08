@@ -108,28 +108,6 @@
         .close-button:hover, .close-button:focus {
             color: #1f2937;
         }
-        /* Modal Table styles */
-        .modal-table-container {
-            max-height: 300px;
-            overflow-y: auto;
-            border-radius: 0.5rem;
-            border: 1px solid #e5e7eb;
-        }
-        .modal-table th, .modal-table td {
-            padding: 0.75rem 1.5rem;
-            text-align: right;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .modal-table th {
-            background-color: #f9fafb;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: #4b5563;
-        }
-        .modal-table tr:hover {
-            background-color: #f3f4f6;
-            cursor: pointer;
-        }
         #modal-letter-content {
             white-space: pre-wrap;
             text-align: right;
@@ -144,7 +122,6 @@
             max-height: 50vh;
             overflow-y: auto;
         }
-        /* Dropdown styles */
         .dropdown {
             position: relative;
             display: inline-block;
@@ -152,12 +129,12 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            background-color: #1f2937; /* gray-800 */
+            background-color: #1f2937;
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
             border-radius: 0.5rem;
-            bottom: 100%; /* Position above the button */
+            bottom: 100%;
             margin-bottom: 0.5rem;
             padding: 0.5rem 0;
             animation: slideUp 0.2s ease-out;
@@ -167,7 +144,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .dropdown-content a {
-            color: #d1d5db; /* gray-300 */
+            color: #d1d5db;
             padding: 12px 16px;
             text-decoration: none;
             display: flex;
@@ -175,7 +152,7 @@
             transition: background-color 0.2s;
         }
         .dropdown-content a:hover {
-            background-color: #374151; /* gray-700 */
+            background-color: #374151;
         }
         .dropdown-content i {
             margin-left: 0.5rem;
@@ -303,9 +280,7 @@
                     <div>
                         <label for="letter-type" class="block text-gray-700 text-sm font-bold mb-2">نوع نامه:</label>
                         <select id="letter-type" class="shadow-sm border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="GEN">عمومی</option>
-                            <option value="FIN">مالی</option>
-                            <option value="HR">منابع انسانی</option>
+                            <!-- Options will be loaded by JavaScript -->
                         </select>
                     </div>
                      <div>
@@ -475,6 +450,34 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Letter Type Management Section -->
+                <div class="mt-10 pt-6 border-t">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">مدیریت انواع نامه</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-700 mb-3">افزودن نوع جدید</h4>
+                            <form id="add-letter-type-form" class="space-y-4">
+                                <div>
+                                    <label for="new-letter-type-code" class="block text-gray-700 text-sm font-bold mb-2">کد (انگلیسی، ۳ حرف، مثال: TCH):</label>
+                                    <input type="text" id="new-letter-type-code" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required maxlength="3">
+                                </div>
+                                <div>
+                                    <label for="new-letter-type-name" class="block text-gray-700 text-sm font-bold mb-2">نام نمایشی (فارسی، مثال: فنی):</label>
+                                    <input type="text" id="new-letter-type-name" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required>
+                                </div>
+                                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">افزودن</button>
+                            </form>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-700 mb-3">انواع موجود</h4>
+                            <div id="letter-types-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 border rounded-md p-2 bg-gray-50">
+                                <!-- Letter types will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- User Management Section -->
                 <div class="mt-10 pt-6 border-t">
                      <h3 class="text-xl font-semibold text-gray-800 mb-4">مدیریت کاربران سیستم</h3>
@@ -519,6 +522,28 @@
     <div id="selectContactModal" class="modal"><div class="modal-content max-w-2xl"><span class="close-button">&times;</span><h3 class="text-xl font-semibold text-gray-700 mb-4">انتخاب مخاطب</h3><div class="mb-4 flex items-center"><input type="text" id="select-contact-search" class="shadow-sm appearance-none border rounded-r-md w-full py-2 px-3 text-gray-700" placeholder="جستجوی مخاطب"><button id="select-contact-search-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-l-md"><i class="fas fa-search"></i></button></div><div class="modal-table-container"><table class="min-w-full bg-white modal-table"><thead class="bg-gray-50"><tr><th class="py-3 px-6 text-right">نام</th><th class="py-3 px-6 text-right">نام خانوادگی</th><th class="py-3 px-6 text-right">سازمان</th></tr></thead><tbody id="select-contact-table-body"></tbody></table></div><div class="flex justify-end mt-4"><button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">لغو</button></div></div></div>
     <div id="letter-download-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">نامه تولید شد</h3><div id="modal-letter-content"><div id="letter-template-info" class="mb-4 text-center text-sm text-gray-500"></div><div id="letter-body-display"></div></div><div class="flex justify-center mt-6 space-x-4 flex-wrap gap-2"><button id="download-docx-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg"><i class="fas fa-file-word ml-2"></i>دانلود Word</button><button id="copy-letter-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-lg"><i class="fas fa-copy ml-2"></i>کپی متن</button><button id="download-pdf-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-lg"><i class="fas fa-file-pdf ml-2"></i>دانلود PDF</button></div></div></div>
     <div id="changePasswordModal" class="modal"><div class="modal-content max-w-md"><span class="close-button">&times;</span><h3 class="text-xl font-semibold text-gray-700 mb-6">تغییر رمز عبور</h3><form id="change-password-form" class="space-y-4"><div><label for="current-password" class="block text-gray-700 text-sm font-bold mb-2">رمز عبور فعلی:</label><input type="password" id="current-password" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required></div><div><label for="new-password" class="block text-gray-700 text-sm font-bold mb-2">رمز عبور جدید:</label><input type="password" id="new-password" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required></div><div><label for="confirm-new-password" class="block text-gray-700 text-sm font-bold mb-2">تکرار رمز عبور جدید:</label><input type="password" id="confirm-new-password" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required></div><div class="pt-4 flex justify-end space-x-2 rtl:space-x-reverse"><button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md">ذخیره رمز جدید</button><button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">لغو</button></div></form></div></div>
+    
+    <div id="editLetterModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">ویرایش نامه</h3>
+            <form id="edit-letter-form">
+                <input type="hidden" id="edit-letter-id">
+                <div class="mb-4">
+                    <label for="edit-letter-subject" class="block text-gray-700 text-sm font-bold mb-2">موضوع نامه:</label>
+                    <input type="text" id="edit-letter-subject" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="edit-letter-body" class="block text-gray-700 text-sm font-bold mb-2">متن نامه:</label>
+                    <textarea id="edit-letter-body" rows="10" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md">ذخیره تغییرات</button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Status Bar -->
     <div id="status-bar" class="fixed bottom-0 left-0 mr-64 w-[calc(100%-16rem)] bg-white border-t border-gray-200 text-gray-600 text-sm py-2 px-6 text-right transition-all duration-300">
@@ -672,40 +697,6 @@
             }
         };
 
-        const activateTab = async (tabId) => {
-            if (!currentUser.company_name) {
-                showCustomAlert('لطفاً ابتدا وارد سیستم شوید.');
-                window.location.href = '/';
-                return;
-            }
-
-            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
-            document.querySelectorAll('.page-content').forEach(content => content.classList.remove('active'));
-
-            const targetLink = document.querySelector(`.sidebar-link[data-tab="${tabId}"]`);
-            const targetContent = document.getElementById(tabId);
-
-            if (targetLink && targetContent) {
-                targetLink.classList.add('active');
-                targetContent.classList.add('active');
-                showStatus(`صفحه "${targetLink.textContent.trim()}" فعال شد.`);
-
-                if (document.getElementById('manage-users-section').classList.contains('hidden') === false && tabId !== 'settings') {
-                    document.getElementById('manage-users-section').classList.add('hidden');
-                }
-                
-                if (tabId === 'crm') { await fetchOrganizations(); await fetchContacts(); }
-                else if (tabId === 'archive') { await fetchLetters(); }
-                else if (tabId === 'settings') { await fetchCompanySettings(); }
-                else if (tabId === 'reports') { await fetchAndRenderReports(document.getElementById('report-period-select').value); }
-                else if (tabId === 'dashboard') {
-                    document.getElementById('dashboard-company-name').textContent = currentUser.company_name || 'نامشخص';
-                    document.getElementById('dashboard-user-email').textContent = currentUser.email || 'نامشخص';
-                    document.getElementById('dashboard-user-role').textContent = currentUser.role || 'نامشخص';
-                }
-            }
-        };
-        
         const fetchCompanySettings = async () => {
             if (!currentUser.company_name) return;
             showStatus('در حال بارگذاری تنظیمات شرکت...');
@@ -1044,7 +1035,8 @@
                     <td class="py-4 px-6">${letter.organization_name || '---'}</td>
                     <td class="py-4 px-6">${contactName}</td>
                     <td class="py-4 px-6 text-center">
-                        <button class="text-indigo-600 hover:text-indigo-900 font-medium" onclick="openLetterPreviewModal(${letter.id})">باز کردن</button>
+                        <button class="text-indigo-600 hover:text-indigo-900 font-medium ml-2" onclick="openLetterPreviewModal(${letter.id})">باز کردن</button>
+                        <button class="text-blue-600 hover:text-blue-900 font-medium" onclick="openEditLetterModal(${letter.id})">ویرایش</button>
                     </td>
                 `;
             });
@@ -1281,29 +1273,148 @@
             });
         };
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            showStatus('برنامه در حال بارگذاری است...');
-            const storedUser = localStorage.getItem('currentUser');
-            if (storedUser) {
-                try {
-                    currentUser = JSON.parse(storedUser);
-                    await fetchCompanySettings();
-                    if (currentUser.company_name) {
-                        showStatus(`خوش آمدید، ${currentUser.email}`);
-                        document.getElementById('sidebar-user-email').textContent = currentUser.email;
-                        document.getElementById('sidebar-company-name').textContent = currentUser.company_name;
-                        applyUserPermissions();
-                        activateTab('dashboard');
-                    } else {
-                        window.location.href = '/';
-                    }
-                } catch (e) {
-                    window.location.href = '/';
-                }
-            } else {
+        const activateTab = async (tabId) => {
+            if (!currentUser.company_name) {
+                showCustomAlert('لطفاً ابتدا وارد سیستم شوید.');
                 window.location.href = '/';
+                return;
             }
 
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.page-content').forEach(content => content.classList.remove('active'));
+
+            const targetLink = document.querySelector(`.sidebar-link[data-tab="${tabId}"]`);
+            const targetContent = document.getElementById(tabId);
+
+            if (targetLink && targetContent) {
+                targetLink.classList.add('active');
+                targetContent.classList.add('active');
+                showStatus(`صفحه "${targetLink.textContent.trim()}" فعال شد.`);
+
+                if (document.getElementById('manage-users-section').classList.contains('hidden') === false && tabId !== 'settings') {
+                    document.getElementById('manage-users-section').classList.add('hidden');
+                }
+                
+                if (tabId === 'crm') { 
+                    await fetchOrganizations(); 
+                    await fetchContacts(); 
+                } else if (tabId === 'archive') { 
+                    await fetchLetters(); 
+                } else if (tabId === 'settings') { 
+                    await fetchCompanySettings(); 
+                    await fetchAndDisplayLetterTypes();
+                } else if (tabId === 'reports') { 
+                    await fetchAndRenderReports(document.getElementById('report-period-select').value); 
+                } else if (tabId === 'letter') {
+                    await fetchAndDisplayLetterTypes();
+                } else if (tabId === 'dashboard') {
+                    document.getElementById('dashboard-company-name').textContent = currentUser.company_name || 'نامشخص';
+                    document.getElementById('dashboard-user-email').textContent = currentUser.email || 'نامشخص';
+                    document.getElementById('dashboard-user-role').textContent = currentUser.role || 'نامشخص';
+                }
+            }
+        };
+
+        window.openEditLetterModal = async function(letterId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/letters/${letterId}?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) {
+                    throw new Error('خطا در دریافت اطلاعات نامه.');
+                }
+                const letter = await response.json();
+                document.getElementById('edit-letter-id').value = letter.id;
+                document.getElementById('edit-letter-subject').value = letter.subject;
+                document.getElementById('edit-letter-body').value = letter.body;
+                openModal(document.getElementById('editLetterModal'));
+            } catch (error) {
+                showCustomAlert(error.message);
+            }
+        };
+
+        async function fetchAndDisplayLetterTypes() {
+            if (!currentUser.company_name) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings/letter-types?company_name=${encodeURIComponent(currentUser.company_name)}`);
+                if (!response.ok) throw new Error('خطا در بارگذاری انواع نامه');
+                const types = await response.json();
+
+                const listContainer = document.getElementById('letter-types-list');
+                listContainer.innerHTML = '';
+                if (types.length === 0) {
+                    listContainer.innerHTML = `<p class="text-gray-500">هیچ نوعی تعریف نشده است.</p>`;
+                } else {
+                    types.forEach(type => {
+                        const typeElement = document.createElement('div');
+                        typeElement.className = 'flex justify-between items-center bg-white p-2 rounded shadow-sm';
+                        typeElement.innerHTML = `
+                            <span>${type.name} (${type.code})</span>
+                            <button class="text-red-500 hover:text-red-700 text-xl font-bold" onclick="deleteLetterTypeHandler(${type.id})">&times;</button>
+                        `;
+                        listContainer.appendChild(typeElement);
+                    });
+                }
+
+                const letterTypeSelect = document.getElementById('letter-type');
+                letterTypeSelect.innerHTML = '';
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.code;
+                    option.textContent = type.name;
+                    letterTypeSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error fetching letter types:', error);
+                showCustomAlert(error.message);
+            }
+        }
+        
+        window.deleteLetterTypeHandler = async (typeId) => {
+            showCustomConfirm('آیا از حذف این نوع نامه مطمئن هستید؟', async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/settings/letter-types/${typeId}?company_name=${encodeURIComponent(currentUser.company_name)}`, {
+                            method: 'DELETE',
+                        });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.message);
+                        
+                        showCustomAlert(result.message);
+                        await fetchAndDisplayLetterTypes();
+                    } catch (error) {
+                        showCustomAlert(`خطا: ${error.message}`);
+                    }
+                }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial Load
+            (async () => {
+                showStatus('برنامه در حال بارگذاری است...');
+                const storedUser = localStorage.getItem('currentUser');
+                if (storedUser) {
+                    try {
+                        currentUser = JSON.parse(storedUser);
+                        await fetchCompanySettings();
+                        if (currentUser.company_name) {
+                            showStatus(`خوش آمدید، ${currentUser.email}`);
+                            document.getElementById('sidebar-user-email').textContent = currentUser.email;
+                            document.getElementById('sidebar-company-name').textContent = currentUser.company_name;
+                            applyUserPermissions();
+                            activateTab('dashboard');
+                        } else {
+                            window.location.href = '/';
+                        }
+                    } catch (e) {
+                        window.location.href = '/';
+                    }
+                } else {
+                    window.location.href = '/';
+                }
+            })();
+
+            // Event Listeners
             document.querySelectorAll('.sidebar-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -1311,7 +1422,6 @@
                 });
             });
 
-            // User Menu Dropdown Logic
             const userMenuBtn = document.getElementById('user-menu-btn');
             const userMenuDropdown = document.getElementById('user-menu-dropdown');
             userMenuBtn.addEventListener('click', (e) => {
@@ -1333,8 +1443,6 @@
                 window.location.href = '/';
             });
 
-
-            // Setup all modals and their close/cancel buttons
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.querySelector('.close-button')?.addEventListener('click', () => closeModal(modal));
                 modal.querySelectorAll('button[type="button"]').forEach(btn => btn.addEventListener('click', () => closeModal(modal)));
@@ -1450,6 +1558,63 @@
                     closeModal(document.getElementById('changePasswordModal'));
                 } catch (error) {
                     showCustomAlert(error.message);
+                }
+            });
+
+            document.getElementById('edit-letter-form').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const letterId = document.getElementById('edit-letter-id').value;
+                const subject = document.getElementById('edit-letter-subject').value;
+                const body = document.getElementById('edit-letter-body').value;
+                try {
+                    const response = await fetch(`${API_BASE_URL}/letters/${letterId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            company_name: currentUser.company_name,
+                            subject: subject,
+                            body: body
+                        }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.message || 'خطا در به‌روزرسانی نامه.');
+                    }
+                    showCustomAlert(result.message);
+                    closeModal(document.getElementById('editLetterModal'));
+                    fetchLetters();
+                } catch (error) {
+                    showCustomAlert(error.message);
+                }
+            });
+
+            document.getElementById('add-letter-type-form').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const codeInput = document.getElementById('new-letter-type-code');
+                const nameInput = document.getElementById('new-letter-type-name');
+                const code = codeInput.value.trim().toUpperCase();
+                const name = nameInput.value.trim();
+
+                if (!code || !name) {
+                    showCustomAlert('کد و نام نمی‌توانند خالی باشند.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/settings/letter-types`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ company_name: currentUser.company_name, code, name }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message);
+                    
+                    showCustomAlert(result.message);
+                    codeInput.value = '';
+                    nameInput.value = '';
+                    await fetchAndDisplayLetterTypes();
+                } catch (error) {
+                    showCustomAlert(`خطا: ${error.message}`);
                 }
             });
 
