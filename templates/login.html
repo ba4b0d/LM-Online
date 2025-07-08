@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ورود به سیستم RayaCRM</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vazirmatn Font -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
         body {
@@ -95,12 +92,11 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        localStorage.setItem('currentUser', JSON.stringify({
-                            id: data.user_id,
-                            role: data.role,
-                            company_name: data.company_name,
-                            email: data.user_email
-                        }));
+                        // --- START: MODIFICATION ---
+                        // Store the entire user object returned from the API
+                        localStorage.setItem('currentUser', JSON.stringify(data));
+                        // --- END: MODIFICATION ---
+                        
                         loginMessage.textContent = 'ورود موفقیت‌آمیز! در حال انتقال...';
                         loginMessage.className = 'text-center text-sm text-green-400';
                         setTimeout(() => {

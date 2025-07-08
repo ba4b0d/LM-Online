@@ -5,15 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RayaCRM - پنل مدیریت</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vazirmatn Font -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <!-- html2pdf.js for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Chart.js for charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -161,7 +156,6 @@
 </head>
 <body class="flex">
 
-    <!-- Sidebar -->
     <aside class="sidebar bg-gray-800 text-white w-64 min-h-screen p-4 fixed flex flex-col">
         <div class="flex items-center mb-8">
             <i class="fas fa-rocket text-3xl text-indigo-400"></i>
@@ -211,9 +205,7 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content flex-1 mr-64 p-8">
-        <!-- Dashboard Page -->
         <div id="dashboard" class="page-content active">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">داشبورد</h2>
             <p class="text-gray-600 mb-8 text-lg">به سیستم مدیریت نامه‌نگاری و CRM خوش آمدید.</p>
@@ -254,7 +246,6 @@
             </div>
         </div>
 
-        <!-- Letter Generation Page -->
         <div id="letter" class="page-content">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">تولید نامه جدید</h2>
             <div class="bg-white p-8 rounded-xl shadow-md">
@@ -280,8 +271,7 @@
                     <div>
                         <label for="letter-type" class="block text-gray-700 text-sm font-bold mb-2">نوع نامه:</label>
                         <select id="letter-type" class="shadow-sm border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <!-- Options will be loaded by JavaScript -->
-                        </select>
+                            </select>
                     </div>
                      <div>
                         <label for="subject" class="block text-gray-700 text-sm font-bold mb-2">موضوع نامه:</label>
@@ -299,7 +289,6 @@
             </div>
         </div>
         
-        <!-- Archive Page -->
         <div id="archive" class="page-content">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">آرشیو نامه‌ها</h2>
             <div class="bg-white p-8 rounded-xl shadow-md">
@@ -309,7 +298,7 @@
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-                <div class="overflow-x-auto rounded-lg border">
+                <div class="overflow-x-auto rounded-lg border min-h-[500px]">
                     <table class="min-w-full bg-white">
                         <thead class="bg-gray-50">
                             <tr>
@@ -317,6 +306,7 @@
                                 <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع</th>
                                 <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاریخ</th>
                                 <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">موضوع</th>
+                                <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
                                 <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سازمان</th>
                                 <th class="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مخاطب</th>
                                 <th class="py-3 px-6 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
@@ -329,11 +319,9 @@
             </div>
         </div>
 
-        <!-- CRM Page -->
         <div id="crm" class="page-content">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">مدیریت مشتریان و مخاطبین</h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Organizations Section -->
                 <div class="bg-white p-8 rounded-xl shadow-md">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">سازمان‌ها</h3>
                     <div class="mb-4 flex items-center">
@@ -359,7 +347,6 @@
                     </div>
                 </div>
 
-                <!-- Contacts Section -->
                 <div class="bg-white p-8 rounded-xl shadow-md">
                     <h3 class="text-xl font-semibold text-gray-700 mb-4">مخاطبین</h3>
                     <div class="mb-4 flex items-center">
@@ -387,8 +374,7 @@
             </div>
         </div>
         
-        <!-- Reports Page -->
-       <div id="reports" class="page-content">
+        <div id="reports" class="page-content">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">گزارش‌ها</h2>
             <div class="bg-white p-8 rounded-xl shadow-md">
                 <div class="flex justify-between items-center mb-4">
@@ -409,12 +395,10 @@
             </div>
         </div>
 
-        <!-- Settings Page -->
         <div id="settings" class="page-content">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">تنظیمات</h2>
             <div class="bg-white p-8 rounded-xl shadow-md">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Company Info Section -->
                     <div>
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">اطلاعات شرکت</h3>
                         <div class="space-y-4">
@@ -431,7 +415,6 @@
                             </button>
                         </div>
                     </div>
-                    <!-- DOCX Template Upload Section -->
                     <div>
                         <h3 class="text-xl font-semibold mb-4 text-gray-800">قالب سربرگ (Word)</h3>
                         <div class="flex items-center">
@@ -451,7 +434,6 @@
                     </div>
                 </div>
                 
-                <!-- Letter Type Management Section -->
                 <div class="mt-10 pt-6 border-t">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">مدیریت انواع نامه</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -472,13 +454,11 @@
                         <div>
                             <h4 class="text-lg font-medium text-gray-700 mb-3">انواع موجود</h4>
                             <div id="letter-types-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 border rounded-md p-2 bg-gray-50">
-                                <!-- Letter types will be loaded here -->
-                            </div>
+                                </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- User Management Section -->
                 <div class="mt-10 pt-6 border-t">
                      <h3 class="text-xl font-semibold text-gray-800 mb-4">مدیریت کاربران سیستم</h3>
                      <div class="flex justify-between items-center flex-wrap gap-4">
@@ -489,8 +469,7 @@
                      </div>
                 </div>
             </div>
-             <!-- Manage Users Panel (initially hidden) -->
-            <div id="manage-users-section" class="hidden mt-8 p-8 bg-white rounded-xl shadow-md">
+             <div id="manage-users-section" class="hidden mt-8 p-8 bg-white rounded-xl shadow-md">
                 <h3 class="text-2xl font-semibold text-gray-700 mb-4">لیست کاربران</h3>
                 <button id="add-user-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition mb-4">
                     <i class="fas fa-user-plus ml-2"></i> افزودن کاربر جدید
@@ -511,7 +490,6 @@
         </div>
     </main>
 
-    <!-- All Modals will be placed here -->
     <div id="addOrgModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h3 class="text-xl font-semibold text-gray-700 mb-4">افزودن سازمان جدید</h3><form id="add-org-form"><div class="mb-4"><label for="new-org-name" class="block text-gray-700 text-sm font-bold mb-2">نام سازمان:</label><input type="text" id="new-org-name" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required></div><div class="mb-4"><label for="new-org-industry" class="block text-gray-700 text-sm font-bold mb-2">صنعت:</label><input type="text" id="new-org-industry" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="new-org-phone" class="block text-gray-700 text-sm font-bold mb-2">تلفن:</label><input type="text" id="new-org-phone" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="new-org-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label><input type="email" id="new-org-email" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="new-org-address" class="block text-gray-700 text-sm font-bold mb-2">آدرس:</label><input type="text" id="new-org-address" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-6"><label for="new-org-description" class="block text-gray-700 text-sm font-bold mb-2">توضیحات:</label><textarea id="new-org-description" rows="3" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></textarea></div><div class="flex justify-end space-x-2 rtl:space-x-reverse"><button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md">افزودن</button><button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">لغو</button></div></form></div></div>
     <div id="editOrgModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h3 class="text-xl font-semibold text-gray-700 mb-4">ویرایش سازمان</h3><form id="edit-org-form"><input type="hidden" id="edit-org-id"><div class="mb-4"><label for="edit-org-name" class="block text-gray-700 text-sm font-bold mb-2">نام سازمان:</label><input type="text" id="edit-org-name" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required></div><div class="mb-4"><label for="edit-org-industry" class="block text-gray-700 text-sm font-bold mb-2">صنعت:</label><input type="text" id="edit-org-industry" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="edit-org-phone" class="block text-gray-700 text-sm font-bold mb-2">تلفن:</label><input type="text" id="edit-org-phone" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="edit-org-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label><input type="email" id="edit-org-email" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="edit-org-address" class="block text-gray-700 text-sm font-bold mb-2">آدرس:</label><input type="text" id="edit-org-address" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-6"><label for="edit-org-description" class="block text-gray-700 text-sm font-bold mb-2">توضیحات:</label><textarea id="edit-org-description" rows="3" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></textarea></div><div class="flex justify-end space-x-2 rtl:space-x-reverse"><button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md">ذخیره</button><button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">لغو</button></div></form></div></div>
     <div id="addContactModal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h3 class="text-xl font-semibold text-gray-700 mb-4">افزودن مخاطب جدید</h3><form id="add-contact-form"><div class="mb-4"><label for="new-contact-first-name" class="block text-gray-700 text-sm font-bold mb-2">نام:</label><input type="text" id="new-contact-first-name" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required></div><div class="mb-4"><label for="new-contact-last-name" class="block text-gray-700 text-sm font-bold mb-2">نام خانوادگی:</label><input type="text" id="new-contact-last-name" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700" required></div><div class="mb-4"><label for="new-contact-title" class="block text-gray-700 text-sm font-bold mb-2">عنوان/سمت:</label><input type="text" id="new-contact-title" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="new-contact-org-id" class="block text-gray-700 text-sm font-bold mb-2">سازمان مرتبط:</label><select id="new-contact-org-id" class="shadow-sm border rounded-md w-full py-2 px-3 text-gray-700"></select></div><div class="mb-4"><label for="new-contact-phone" class="block text-gray-700 text-sm font-bold mb-2">تلفن:</label><input type="text" id="new-contact-phone" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-4"><label for="new-contact-email" class="block text-gray-700 text-sm font-bold mb-2">ایمیل:</label><input type="email" id="new-contact-email" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></div><div class="mb-6"><label for="new-contact-notes" class="block text-gray-700 text-sm font-bold mb-2">یادداشت‌ها:</label><textarea id="new-contact-notes" rows="3" class="shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700"></textarea></div><div class="flex justify-end space-x-2 rtl:space-x-reverse"><button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md">افزودن</button><button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">لغو</button></div></form></div></div>
@@ -545,7 +523,6 @@
         </div>
     </div>
 
-    <!-- Status Bar -->
     <div id="status-bar" class="fixed bottom-0 left-0 mr-64 w-[calc(100%-16rem)] bg-white border-t border-gray-200 text-gray-600 text-sm py-2 px-6 text-right transition-all duration-300">
         آماده به کار
     </div>
@@ -553,15 +530,7 @@
     <script>
         const API_BASE_URL = 'http://localhost:5000/api'; 
         
-        let currentUser = {
-            id: null,
-            role: null,
-            company_name: null,
-            email: null,
-            company_short_name: '',
-            company_full_name_footer: '',
-            letter_template_path: null
-        };
+        let currentUser = {};
 
         let selectedOrgIdInCrm = null;
         let selectedContactIdInCrm = null;
@@ -615,12 +584,6 @@
             const forms = modalElement.querySelectorAll('form');
             forms.forEach(form => form.reset());
         }
-
-        window.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
-                closeModal(event.target);
-            }
-        });
 
         const applyUserPermissions = () => {
             const settingsLink = document.querySelector('.sidebar-link[data-tab="settings"]');
@@ -1021,26 +984,87 @@
             const archiveTableBody = document.getElementById('archive-table-body');
             archiveTableBody.innerHTML = '';
             if (letters.length === 0) {
-                archiveTableBody.innerHTML = `<tr><td colspan="7" class="py-3 px-6 text-center text-gray-500">هیچ نامه‌ای یافت نشد.</td></tr>`;
+                archiveTableBody.innerHTML = `<tr><td colspan="8" class="py-3 px-6 text-center text-gray-500">هیچ نامه‌ای یافت نشد.</td></tr>`;
                 return;
             }
             letters.forEach(letter => {
                 const row = archiveTableBody.insertRow();
                 const contactName = (letter.first_name && letter.last_name) ? `${letter.first_name} ${letter.last_name}` : '---';
+                
+                const status_colors = {
+                    'پیش‌نویس': 'bg-gray-200 text-gray-800',
+                    'ارسال شده': 'bg-blue-200 text-blue-800',
+                    'پاسخ داده شده': 'bg-green-200 text-green-800',
+                    'بایگانی شده': 'bg-purple-200 text-purple-800'
+                };
+                const status_color = status_colors[letter.status] || 'bg-gray-200 text-gray-800';
+
                 row.innerHTML = `
                     <td class="py-4 px-6 whitespace-nowrap">${letter.letter_code_persian}</td>
                     <td class="py-4 px-6">${letter.type}</td>
                     <td class="py-4 px-6">${letter.date_shamsi_persian}</td>
-                    <td class="py-4 px-6">${letter.subject}</td>
+                    <td class="py-4 px-6 max-w-xs truncate" title="${letter.subject}">${letter.subject}</td>
+                    <td class="py-4 px-6">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${status_color}">
+                            ${letter.status}
+                        </span>
+                    </td>
                     <td class="py-4 px-6">${letter.organization_name || '---'}</td>
                     <td class="py-4 px-6">${contactName}</td>
                     <td class="py-4 px-6 text-center">
-                        <button class="text-indigo-600 hover:text-indigo-900 font-medium ml-2" onclick="openLetterPreviewModal(${letter.id})">باز کردن</button>
-                        <button class="text-blue-600 hover:text-blue-900 font-medium" onclick="openEditLetterModal(${letter.id})">ویرایش</button>
+                        <div class="flex items-center justify-center space-x-2 rtl:space-x-reverse">
+                            <button class="text-indigo-600 hover:text-indigo-900 font-medium" onclick="openLetterPreviewModal(${letter.id})">باز کردن</button>
+                            <button class="text-blue-600 hover:text-blue-900 font-medium" onclick="openEditLetterModal(${letter.id})">ویرایش</button>
+                            <div class="relative inline-block text-left">
+                                <button class="p-1 rounded-full hover:bg-gray-100" onclick="toggleStatusMenu(${letter.id})"><i class="fas fa-ellipsis-v text-gray-600"></i></button>
+                                <div id="status-menu-${letter.id}" class="origin-top-left absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden" style="z-index: 20;" role="menu">
+                                <div class="py-1" role="none">
+                                        <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" onclick="event.preventDefault(); updateStatus(${letter.id}, 'پیش‌نویس')">پیش‌نویس</a>
+                                        <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" onclick="event.preventDefault(); updateStatus(${letter.id}, 'ارسال شده')">ارسال شده</a>
+                                        <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" onclick="event.preventDefault(); updateStatus(${letter.id}, 'پاسخ داده شده')">پاسخ داده شده</a>
+                                        <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" onclick="event.preventDefault(); updateStatus(${letter.id}, 'بایگانی شده')">بایگانی شده</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                 `;
             });
         };
+
+        function toggleStatusMenu(letterId) {
+            document.querySelectorAll('[id^="status-menu-"]').forEach(menu => {
+                if (menu.id !== `status-menu-${letterId}`) {
+                    menu.classList.add('hidden');
+                }
+            });
+            const menu = document.getElementById(`status-menu-${letterId}`);
+            menu.classList.toggle('hidden');
+        }
+
+        async function updateStatus(letterId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/letters/${letterId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        company_name: currentUser.company_name,
+                        status: newStatus
+                    }),
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'خطا در به‌روزرسانی وضعیت.');
+                }
+                showCustomAlert(result.message);
+                fetchLetters();
+            } catch (error) {
+                showCustomAlert(error.message);
+            } finally {
+                const menu = document.getElementById(`status-menu-${letterId}`);
+                if(menu) menu.classList.add('hidden');
+            }
+        }
 
         window.openLetterPreviewModal = async (letterId) => {
             try {
@@ -1389,30 +1413,40 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Initial Load
             (async () => {
                 showStatus('برنامه در حال بارگذاری است...');
                 const storedUser = localStorage.getItem('currentUser');
                 if (storedUser) {
                     try {
                         currentUser = JSON.parse(storedUser);
-                        await fetchCompanySettings();
-                        if (currentUser.company_name) {
+
+                        // Compatibility fix for old login data vs new login data
+                        if (currentUser.user_id && !currentUser.id) {
+                            currentUser.id = currentUser.user_id;
+                        }
+                        if (currentUser.user_email && !currentUser.email) {
+                            currentUser.email = currentUser.user_email;
+                        }
+
+                        if (currentUser.id && currentUser.company_name) {
                             showStatus(`خوش آمدید، ${currentUser.email}`);
                             document.getElementById('sidebar-user-email').textContent = currentUser.email;
                             document.getElementById('sidebar-company-name').textContent = currentUser.company_name;
                             applyUserPermissions();
                             activateTab('dashboard');
                         } else {
-                            window.location.href = '/';
+                             window.location.href = '/'; 
                         }
                     } catch (e) {
-                        window.location.href = '/';
+                        console.error("Error parsing user data from localStorage", e);
+                        localStorage.removeItem('currentUser'); 
+                        window.location.href = '/'; 
                     }
                 } else {
-                    window.location.href = '/';
+                    window.location.href = '/'; 
                 }
             })();
+
 
             // Event Listeners
             document.querySelectorAll('.sidebar-link').forEach(link => {
@@ -1428,9 +1462,6 @@
                 e.stopPropagation();
                 userMenuDropdown.style.display = userMenuDropdown.style.display === 'block' ? 'none' : 'block';
             });
-            window.addEventListener('click', () => {
-                userMenuDropdown.style.display = 'none';
-            });
 
             document.getElementById('user-menu-change-password').addEventListener('click', (e) => {
                 e.preventDefault();
@@ -1445,7 +1476,11 @@
 
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.querySelector('.close-button')?.addEventListener('click', () => closeModal(modal));
-                modal.querySelectorAll('button[type="button"]').forEach(btn => btn.addEventListener('click', () => closeModal(modal)));
+                modal.querySelectorAll('button[type="button"]').forEach(btn => {
+                    if (!btn.closest('#custom-confirm-modal')) {
+                        btn.addEventListener('click', () => closeModal(modal));
+                    }
+                });
             });
 
             // Form Submissions
@@ -1698,6 +1733,25 @@
             });
             document.getElementById('report-period-select').addEventListener('change', (e) => {
                 fetchAndRenderReports(e.target.value);
+            });
+
+            // Close dropdowns when clicking outside
+            window.addEventListener('click', (e) => {
+                if (!e.target.closest('#user-menu-btn')) {
+                    const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                    if(userMenuDropdown) userMenuDropdown.style.display = 'none';
+                }
+                if (!e.target.closest('.relative.inline-block')) {
+                    document.querySelectorAll('[id^="status-menu-"]').forEach(menu => {
+                    menu.classList.add('hidden');
+                    });
+                }
+            });
+             // Close modal when clicking on it
+            window.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal')) {
+                    closeModal(event.target);
+                }
             });
         });
     </script>

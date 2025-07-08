@@ -120,6 +120,7 @@ def init_db(company_name):
             local_file_path TEXT,
             current_gregorian_date TEXT NOT NULL,
             user_id INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT 'پیش‌نویس',
             FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL,
             FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL,
             FOREIGN KEY (user_id) REFERENCES users(id)
@@ -476,8 +477,6 @@ def handle_user(user_id):
         except Exception as e:
             return jsonify({"message": f"Error deleting user: {str(e)}"}), 500
 
-# --- All other endpoints (Settings, Organizations, Contacts, etc.) remain the same ---
-# ... (Keep all your existing endpoints for settings, orgs, contacts here) ...
 # --- Settings, Organizations, and Contacts Endpoints ---
 
 # --- Settings Endpoints ---
@@ -722,9 +721,6 @@ def handle_single_contact(contact_id):
             return jsonify({"message": f"Error deleting contact: {str(e)}"}), 500
 
 # --- Letter Endpoints ---
-# ... (The rest of your app.py code)
-
-# --- Letter Endpoints ---
 @app.route('/api/letters/generate', methods=['POST'])
 def generate_letter():
     data = request.get_json()
@@ -736,8 +732,18 @@ def generate_letter():
     contact_id = data.get('contact_id')
     user_id = data.get('user_id')
 
-    if not all([company_name, subject, body, letter_type, user_id]):
-        return jsonify({"message": "All fields are required"}), 400
+    # --- START: NEW VALIDATION BLOCK ---
+    if not company_name:
+        return jsonify({"message": "خطای سیستمی: نام شرکت مشخص نشده است."}), 400
+    if not user_id:
+        return jsonify({"message": "خطای سیستمی: کاربر مشخص نشده است."}), 400
+    if not subject or not subject.strip():
+        return jsonify({"message": "موضوع نامه نمی‌تواند خالی باشد."}), 400
+    if not body or not body.strip():
+        return jsonify({"message": "متن نامه نمی‌تواند خالی باشد."}), 400
+    if not letter_type:
+        return jsonify({"message": "لطفاً یک نوع نامه را انتخاب کنید. اگر لیستی وجود ندارد، ابتدا در بخش تنظیمات یک نوع نامه تعریف کنید."}), 400
+    # --- END: NEW VALIDATION BLOCK ---
 
     try:
         conn = get_db_connection(company_name)
@@ -951,6 +957,35 @@ def download_letter(letter_id):
         return response
     except Exception as e:
         return jsonify({"message": f"Error serving letter file: {str(e)}"}), 500
+
+@app.route('/api/letters/<int:letter_id>/status', methods=['PUT'])
+def update_letter_status(letter_id):
+    company_name = request.json.get('company_name')
+    new_status = request.json.get('status')
+
+    if not all([company_name, new_status]):
+        return jsonify({"message": "Company name and new status are required"}), 400
+
+    # Define the allowed statuses for validation
+    allowed_statuses = ['پیش‌نویس', 'ارسال شده', 'پاسخ داده شده', 'بایگانی شده']
+    if new_status not in allowed_statuses:
+        return jsonify({"message": f"Invalid status. Allowed statuses are: {', '.join(allowed_statuses)}"}), 400
+
+    try:
+        conn = get_db_connection(company_name)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE letters SET status = ? WHERE id = ?", (new_status, letter_id))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            conn.close()
+            return jsonify({"message": "Letter not found"}), 404
+
+        conn.close()
+        return jsonify({"message": "Letter status updated successfully", "new_status": new_status}), 200
+    except Exception as e:
+        print(f"Error updating letter status: {e}")
+        return jsonify({"message": f"An error occurred: {e}"}), 500
 
 # --- Reporting Endpoints ---
 @app.route('/api/reports/letters-by-period', methods=['GET'])
