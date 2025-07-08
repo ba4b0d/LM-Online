@@ -936,7 +936,7 @@ def download_letter(letter_id):
 def get_letters_by_period_report():
     """Generates a report of letters created per period (daily, weekly, monthly, yearly)."""
     company_name = request.args.get('company_name')
-    period = request.args.get('period', 'monthly') # Get period, default to monthly
+    period = request.args.get('period', 'monthly')
 
     if not company_name:
         return jsonify({"message": "Company name is required"}), 400
@@ -948,30 +948,36 @@ def get_letters_by_period_report():
         conn = get_db_connection(company_name)
         cursor = conn.cursor()
         
-        cursor.execute("SELECT current_gregorian_date FROM letters")
+        # Use the Persian date column directly
+        cursor.execute("SELECT date_shamsi_persian FROM letters")
         dates = cursor.fetchall()
         conn.close()
 
         counts = collections.defaultdict(int)
         for row in dates:
             try:
-                date_obj = datetime.strptime(row['current_gregorian_date'].split(' ')[0], '%Y-%m-%d')
-                j_date = jdatetime.date.fromgregorian(date=date_obj)
+                # The date is already in 'YYYY/MM/DD' format
+                j_date_str = row['date_shamsi_persian']
+                year, month, day = map(int, j_date_str.split('/'))
+                j_date = jdatetime.date(year, month, day)
                 
                 if period == 'daily':
                     key = j_date.strftime('%Y-%m-%d')
                 elif period == 'weekly':
-                    start_of_week = j_date - jdatetime.timedelta(days=j_date.weekday())
-                    key = start_of_week.strftime('%Y-%m-%d')
+                    # Saturday is the start of the week in jdatetime (weekday() == 0)
+                    start_of_week = j_date - jdatetime.timedelta(days=((j_date.weekday() + 1) % 7))
+                    key = f"هفته {start_of_week.strftime('%Y/%m/%d')}"
                 elif period == 'monthly':
-                    key = j_date.strftime('%Y-%m')
+                    key = j_date.strftime('%Y-%m') # e.g., '1403-04'
                 elif period == 'yearly':
-                    key = j_date.strftime('%Y')
+                    key = j_date.strftime('%Y')   # e.g., '1403'
                 
                 counts[key] += 1
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, AttributeError):
+                # Skip if the date format is incorrect or null
                 continue
         
+        # Sort the dictionary by keys (periods)
         sorted_counts = dict(sorted(counts.items()))
 
         return jsonify(sorted_counts), 200
@@ -979,7 +985,6 @@ def get_letters_by_period_report():
     except Exception as e:
         print(f"Error generating report: {e}")
         return jsonify({"message": f"Error generating report: {str(e)}"}), 500
-
 # --- Main execution block ---
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

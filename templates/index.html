@@ -413,10 +413,21 @@
         </div>
         
         <!-- Reports Page -->
-        <div id="reports" class="page-content">
+       <div id="reports" class="page-content">
             <h2 class="text-3xl font-bold text-gray-800 mb-6">گزارش‌ها</h2>
             <div class="bg-white p-8 rounded-xl shadow-md">
-                <h3 class="text-xl font-semibold text-gray-700 mb-4">تعداد نامه‌های صادر شده در هر ماه</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-700">تعداد نامه‌های صادر شده</h3>
+                    <div>
+                        <label for="report-period-select" class="text-sm font-medium text-gray-700 mr-2">دوره زمانی:</label>
+                        <select id="report-period-select" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <option value="daily">روزانه</option>
+                            <option value="weekly">هفتگی</option>
+                            <option value="monthly" selected>ماهانه</option>
+                            <option value="yearly">سالانه</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="h-96">
                     <canvas id="lettersByMonthChart"></canvas>
                 </div>
